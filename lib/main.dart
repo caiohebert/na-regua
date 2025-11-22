@@ -33,8 +33,6 @@ void main() async {
   );
 }
 
-// Removed MainPage class as it has been extracted to lib/pages/home_page.dart
-
 class AuthenticationWrapper extends ConsumerWidget {
   const AuthenticationWrapper({super.key});
 
@@ -44,7 +42,7 @@ class AuthenticationWrapper extends ConsumerWidget {
 
     return authStateAsync.when(
       data: (AuthState state) {
-        return state.session == null ? const SignInPage() : const MainPage();
+        return state.session == null ? const SignInPage() : const WelcomeScreen();
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),

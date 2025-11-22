@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/providers/navigation_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -63,14 +65,14 @@ class HomeScreen extends StatelessWidget {
                             icon: Icons.calendar_today,
                             label: 'Agendar',
                             onTap: () {
-                              // TODO: Navigate to schedule
+                              ref.read(navigationProvider.notifier).navigateTo(1, showBackButton: true);
                             },
                           ),
                           _QuickActionButton(
                             icon: Icons.history,
                             label: 'Histórico',
                             onTap: () {
-                              // TODO: Navigate to history
+                              ref.read(navigationProvider.notifier).navigateTo(3, showBackButton: true);
                             },
                           ),
                           _QuickActionButton(

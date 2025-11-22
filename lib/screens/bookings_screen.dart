@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/providers/navigation_provider.dart';
 import '../providers/booking_provider.dart';
 import '../widgets/booking_card.dart';
 
-class BookingsPage extends ConsumerWidget {
-  const BookingsPage({super.key});
+class BookingsScreen extends ConsumerWidget {
+  const BookingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -13,15 +14,18 @@ class BookingsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: const Text('My Bookings', style: TextStyle(color: Colors.white)),
+        title: const Text('Meus agendamentos', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => ref.read(navigationProvider.notifier).goBack(),
+        ),
       ),
       body: bookings.isEmpty
           ? const Center(
               child: Text(
-                'No bookings found',
+                'Nenhum agendamento encontrado',
                 style: TextStyle(color: Colors.grey),
               ),
             )
