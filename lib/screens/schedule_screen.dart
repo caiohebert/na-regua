@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
+import 'package:na_regua/widgets/date_picker_widget.dart';
 import 'package:na_regua/widgets/service_card.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
@@ -77,49 +78,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              Card(
-                child: InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 90)),
-                    );
-                    if (date != null) {
-                      setState(() => _selectedDate = date);
-                    }
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Data Selecionada',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
+              DatePickerWidget(
+                selectedDate: _selectedDate,
+                onDateSelected: (date) => setState(() => _selectedDate = date),
               ),
               
               const SizedBox(height: 32),
