@@ -9,22 +9,44 @@ class StatusText extends StatelessWidget {
 
   const StatusText({super.key, required this.status, required this.booking});
 
+  Color get color {
+    switch (status) {
+      case 'upcoming':
+        return const Color(0xFFEDB33C);
+      case 'completed':
+        return Colors.green;
+      case 'canceled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String get displayText {
+    switch (status) {
+      case 'upcoming':
+        return 'AGENDADO';
+      case 'completed':
+        return 'CONCLUÍDO';
+      case 'canceled':
+        return 'CANCELADO';
+      default:
+        throw Exception('Unknown status');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: status == 'upcoming'
-            ? const Color(0xFFEDB33C).withValues(alpha: 0.2)
-            : Colors.grey.withValues(alpha: 0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status.toUpperCase(),
+        displayText,
         style: TextStyle(
-          color: status == 'upcoming'
-              ? const Color(0xFFEDB33C)
-              : Colors.grey,
+          color: color,
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
