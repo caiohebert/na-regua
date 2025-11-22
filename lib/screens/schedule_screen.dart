@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
 import 'package:na_regua/widgets/date_picker_widget.dart';
+import 'package:na_regua/widgets/barber_picker.dart';
 import 'package:na_regua/widgets/service_card.dart';
+import 'package:na_regua/widgets/timetable_widget.dart';
+import 'package:na_regua/models/barber_model.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -14,6 +17,8 @@ class ScheduleScreen extends ConsumerStatefulWidget {
 
 class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
+  BarberModel? _selectedBarber;
+  String? _selectedTime;
 
   @override
   Widget build(BuildContext context) {
@@ -84,27 +89,24 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               ),
               
               const SizedBox(height: 32),
+
+              BarberPicker(
+                date: _selectedDate,
+                onBarberSelected: (barber) => setState(() {
+                  _selectedBarber = barber;
+                  _selectedTime = null; // Reset time when barber changes
+                }),
+              ),
+              
+              const SizedBox(height: 32),
               
               // Time Selection
-              Text(
-                'Horários Disponíveis',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  '09:00',
-                  '10:00',
-                  '11:00',
-                  '14:00',
-                  '15:00',
-                  '16:00',
-                  '17:00',
-                  '18:00',
-                ].map((time) => _TimeChip(time: time)).toList(),
-              ),
+              if (_selectedBarber != null)
+                TimetableWidget(
+                  barber: _selectedBarber,
+                  date: _selectedDate,
+                  onTimeSelected: (time) => setState(() => _selectedTime = time),
+                ),
               
               const SizedBox(height: 32),
               
@@ -112,13 +114,16 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade de agendamento em desenvolvimento'),
-                      ),
-                    );
-                  },
+                  onPressed: _selectedTime != null
+                      ? () {
+                          final barberName = _selectedBarber?.name ?? 'Nenhum barbeiro selecionado';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Agendamento com $barberName às $_selectedTime em desenvolvimento'),
+                            ),
+                          );
+                        }
+                      : null,
                   child: const Text('Confirmar Agendamento'),
                 ),
               ),
@@ -129,35 +134,3 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     );
   }
 }
-
-class _TimeChip extends StatefulWidget {
-  final String time;
-
-  const _TimeChip({required this.time});
-
-  @override
-  State<_TimeChip> createState() => _TimeChipState();
-}
-
-class _TimeChipState extends State<_TimeChip> {
-  bool _isSelected = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilterChip(
-      label: Text(widget.time),
-      selected: _isSelected,
-      onSelected: (selected) {
-        setState(() => _isSelected = selected);
-      },
-      selectedColor: Theme.of(context).colorScheme.primary,
-      checkmarkColor: Theme.of(context).colorScheme.onPrimary,
-      labelStyle: TextStyle(
-        color: _isSelected 
-            ? Theme.of(context).colorScheme.onPrimary
-            : Theme.of(context).colorScheme.onSurface,
-      ),
-    );
-  }
-}
-

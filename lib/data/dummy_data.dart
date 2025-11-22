@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+
+import 'package:na_regua/models/service_model.dart';
+
 import '../models/barber_model.dart';
 import '../models/service_model.dart';
 import '../models/booking_model.dart';
@@ -64,5 +68,55 @@ final List<BookingModel> dummyBookings = [
     service: dummyBarbers[1].services[0],
     date: DateTime.now().subtract(const Duration(days: 5)),
     status: 'completed',
+  ),
+];
+
+// map date to barber
+final Map<DateTime, List<BarberModel>> dummyBarberAvailability = {
+  DateUtils.dateOnly(DateTime.now()): dummyBarbers,
+  DateUtils.dateOnly(DateTime.now().add(const Duration(days: 1))): [dummyBarbers[0], dummyBarbers[2]],
+  DateUtils.dateOnly(DateTime.now().add(const Duration(days: 2))): [dummyBarbers[1], dummyBarbers[3]],
+};
+
+// map barber name to list of available time slots
+final Map<String, List<String>> dummyTimetable = {
+  'Peter the Barber': [
+    '09:00',
+    '10:00',
+    '11:00',
+    '14:00',
+    '15:00',
+    '16:00',
+    '17:00',
+    '18:00',
+  ],
+  'John Doe': [
+    '10:00',
+    '11:00',
+    '12:00',
+    '13:00',
+    '15:00',
+  ],
+  'Jane Smith': []
+};
+
+final List<ServiceModel> mockServices = [
+  const ServiceModel(
+    name: 'Corte de Cabelo',
+    durationMinutes: 30,
+    price: 40.0,
+    icon: Icons.content_cut,
+  ),
+  const ServiceModel(
+    name: 'Barba',
+    durationMinutes: 20,
+    price: 25.0,
+    icon: Icons.face,
+  ),
+  const ServiceModel(
+    name: 'Corte + Barba',
+    durationMinutes: 45,
+    price: 60.0,
+    icon: Icons.spa,
   ),
 ];
