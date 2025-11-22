@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/widgets/homescreen_quick_actions_widget.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
+import 'package:na_regua/widgets/no_upcoming_appointments_widget.dart';
+import 'package:na_regua/widgets/welcome_back_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -18,22 +21,7 @@ class HomeScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Olá! 👋',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Bem-vindo de volta',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
+                  WelcomeBackWidget(),
                   IconButton(
                     onPressed: () {
                       // TODO: Implement notifications
@@ -47,47 +35,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               
               // Quick Actions Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ações Rápidas',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _QuickActionButton(
-                            icon: Icons.calendar_today,
-                            label: 'Agendar',
-                            onTap: () {
-                              ref.read(navigationProvider.notifier).navigateTo(1, showBackButton: true);
-                            },
-                          ),
-                          _QuickActionButton(
-                            icon: Icons.history,
-                            label: 'Histórico',
-                            onTap: () {
-                              ref.read(navigationProvider.notifier).navigateTo(3, showBackButton: true);
-                            },
-                          ),
-                          _QuickActionButton(
-                            icon: Icons.favorite_outline,
-                            label: 'Favoritos',
-                            onTap: () {
-                              // TODO: Navigate to favorites
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              HomescreenQuickActionsWidget(),
               
               const SizedBox(height: 24),
               
@@ -97,39 +45,7 @@ class HomeScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 48,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Nenhum agendamento',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Agende seu próximo corte',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to schedule
-                        },
-                        child: const Text('Agendar Agora'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              NoUpcomingAppointmentsWidget(),
               
               const SizedBox(height: 24),
               
@@ -159,41 +75,3 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
