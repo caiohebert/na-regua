@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'supabase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:na_regua/auth_provider.dart';
+import 'package:na_regua/data/dummy_data.dart';
+import 'package:na_regua/widgets/barber_card.dart';
 
 // Change to true to enable authentication
 // with Google Sign In
@@ -33,8 +35,30 @@ class MainPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO remove this placeholder
-    return const Scaffold(body: Center(child: Text('Hello')));
+    return Scaffold(
+      backgroundColor: const Color(0xFF121212), // Dark background
+      appBar: AppBar(
+        title: const Text('Available Barbers', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: dummyBarbers.length,
+                itemBuilder: (context, index) {
+                  return BarberCard(barber: dummyBarbers[index]);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
