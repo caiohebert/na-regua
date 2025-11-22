@@ -2,6 +2,62 @@ import 'package:flutter/material.dart';
 import '../models/barber_model.dart';
 import '../pages/barber_details_page.dart';
 
+/*
+  BarberInfo sub-widget to display barber details (name, rating, location)
+*/
+class BarberInfo extends StatelessWidget {
+  const BarberInfo({
+    super.key,
+    required this.barber,
+  });
+
+  final BarberModel barber;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          barber.name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        Row(
+          children: [
+            const Icon(Icons.star, color: Color(0xFFFFD700), size: 16.0),
+            const SizedBox(width: 4.0),
+            Text(
+              barber.rating.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14.0,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4.0),
+        Text(
+          barber.location,
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 12.0,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/*
+  BarberCard widget to display barber information in a card format
+  (Picture, Name, Rating, Location, View Button)
+*/
 class BarberCard extends StatelessWidget {
   final BarberModel barber;
 
@@ -40,42 +96,7 @@ class BarberCard extends StatelessWidget {
           const SizedBox(width: 16.0),
           // Barber Info
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  barber.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Color(0xFFFFD700), size: 16.0),
-                    const SizedBox(width: 4.0),
-                    Text(
-                      barber.rating.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  barber.location,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12.0,
-                  ),
-                ),
-              ],
-            ),
+            child: BarberInfo(barber: barber),
           ),
           // View Button
           ElevatedButton(
