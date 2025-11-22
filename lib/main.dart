@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'supabase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:na_regua/auth_provider.dart';
-import 'package:na_regua/pages/main_scaffold.dart';
+import 'package:na_regua/app_theme.dart';
+import 'package:na_regua/screens/welcome_screen.dart';
 
 // Change to true to enable authentication
 // with Google Sign In
@@ -21,9 +22,12 @@ void main() async {
   await Function.apply(Supabase.initialize, [], supabaseOptions);
 
   runApp(
-    const ProviderScope(
+    ProviderScope(
       child: MaterialApp(
-        home: authenticationEnabled ? AuthenticationWrapper() : MainScaffold(),
+        title: 'Na Régua',
+        theme: AppTheme.theme,
+        debugShowCheckedModeBanner: false,
+        home: authenticationEnabled ? const AuthenticationWrapper() : const WelcomeScreen(),
       ),
     ),
   );
@@ -40,7 +44,7 @@ class AuthenticationWrapper extends ConsumerWidget {
 
     return authStateAsync.when(
       data: (AuthState state) {
-        return state.session == null ? const SignInPage() : const MainScaffold();
+        return state.session == null ? const SignInPage() : const MainPage();
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
