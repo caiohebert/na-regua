@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
+import 'package:na_regua/providers/services_provider.dart';
+import 'package:na_regua/widgets/service_card.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
@@ -15,6 +17,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final showBack = ref.watch(navigationProvider).showBackButton;
+    final services = ref.watch(servicesProvider);
 
     return Scaffold(
       appBar: showBack
@@ -55,29 +58,16 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               ),
               const SizedBox(height: 16),
               
-              _ServiceCard(
-                title: 'Corte de Cabelo',
-                duration: '30 min',
-                price: 'R\$ 40,00',
-                icon: Icons.content_cut,
-                onTap: () {},
-              ),
-              const SizedBox(height: 12),
-              _ServiceCard(
-                title: 'Barba',
-                duration: '20 min',
-                price: 'R\$ 25,00',
-                icon: Icons.face,
-                onTap: () {},
-              ),
-              const SizedBox(height: 12),
-              _ServiceCard(
-                title: 'Corte + Barba',
-                duration: '45 min',
-                price: 'R\$ 60,00',
-                icon: Icons.spa,
-                onTap: () {},
-              ),
+              ...services.map((service) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: ServiceCard(
+                  title: service.name,
+                  duration: '${service.durationMinutes} min',
+                  price: 'R\$ ${service.price.toStringAsFixed(2).replaceAll('.', ',')}',
+                  icon: service.icon,
+                  onTap: () {},
+                ),
+              )),
               
               const SizedBox(height: 32),
               
@@ -169,73 +159,6 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     );
                   },
                   child: const Text('Confirmar Agendamento'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ServiceCard extends StatelessWidget {
-  final String title;
-  final String duration;
-  final String price;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _ServiceCard({
-    required this.title,
-    required this.duration,
-    required this.price,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      duration,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                price,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],

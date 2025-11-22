@@ -56,7 +56,7 @@ final List<BookingModel> dummyBookings = [
     barber: dummyBarbers[0],
     service: dummyBarbers[0].services[0],
     date: DateTime.now().add(const Duration(days: 1, hours: 2)),
-    status: 'canceled',
+    status: 'upcoming',
   ),
   BookingModel(
     id: '2',
