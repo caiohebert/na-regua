@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/models/service_model.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
 import 'package:na_regua/widgets/date_picker_widget.dart';
 import 'package:na_regua/widgets/barber_picker.dart';
-import 'package:na_regua/widgets/service_card.dart';
+import 'package:na_regua/widgets/service_picker.dart';
 import 'package:na_regua/widgets/timetable_widget.dart';
 import 'package:na_regua/models/barber_model.dart';
 
@@ -16,9 +17,16 @@ class ScheduleScreen extends ConsumerStatefulWidget {
 }
 
 class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
+  ServiceModel? _selectedService;
   DateTime _selectedDate = DateTime.now();
   BarberModel? _selectedBarber;
   String? _selectedTime;
+
+  bool get isFormComplete {
+    return _selectedService != null &&
+        _selectedBarber != null &&
+        _selectedTime != null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,16 +72,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               ),
               const SizedBox(height: 16),
               
-              ...services.map((service) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: ServiceCard(
-                  title: service.name,
-                  duration: '${service.durationMinutes} min',
-                  price: 'R\$ ${service.price.toStringAsFixed(2).replaceAll('.', ',')}',
-                  icon: service.icon,
-                  onTap: () {},
-                ),
-              )),
+              ServicePicker(
+                services: services,
+                onServiceSelected: (service) => setState(() => _selectedService = service),
+              ),
               
               const SizedBox(height: 32),
               
@@ -114,14 +116,17 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _selectedTime != null
+                  onPressed: isFormComplete
                       ? () {
                           final barberName = _selectedBarber?.name ?? 'Nenhum barbeiro selecionado';
+                          final serviceName = _selectedService?.name ?? 'Nenhum serviço selecionado';
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Agendamento com $barberName às $_selectedTime em desenvolvimento'),
+                              content: Text('Agendamento de $serviceName com $barberName às $_selectedTime em desenvolvimento'),
                             ),
                           );
+                          // return to home screen
+                          ref.read(navigationProvider.notifier).goBack();
                         }
                       : null,
                   child: const Text('Confirmar Agendamento'),
