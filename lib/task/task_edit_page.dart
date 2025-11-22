@@ -12,7 +12,7 @@ class TaskEditPage extends ConsumerStatefulWidget {
 }
 
 class _TaskEditPageState extends ConsumerState<TaskEditPage> {
-  get isNewTask => widget.taskId == null;
+  bool get isNewTask => widget.taskId == null;
   Task? task;
   late final TextEditingController _titleController;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();

@@ -7,24 +7,28 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:na_regua/main.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/screens/welcome_screen.dart';
+import 'package:na_regua/app_theme.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Welcome screen displays correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.theme,
+          home: const WelcomeScreen(),
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the welcome screen displays the app name
+    expect(find.text('Na Régua'), findsOneWidget);
+    expect(find.text('Seu estilo, sua agenda'), findsOneWidget);
+    
+    // Verify that login and register buttons are present
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Criar Conta'), findsOneWidget);
   });
 }
