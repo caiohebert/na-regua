@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:na_regua/models/service_model.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
-import 'package:na_regua/widgets/date_picker_widget.dart';
+import 'package:na_regua/widgets/date_picker.dart';
 import 'package:na_regua/widgets/barber_picker.dart';
 import 'package:na_regua/widgets/service_picker.dart';
-import 'package:na_regua/widgets/timetable_widget.dart';
+import 'package:na_regua/widgets/timetable.dart';
 import 'package:na_regua/models/barber_model.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {

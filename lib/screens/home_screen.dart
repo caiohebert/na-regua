@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:na_regua/widgets/homescreen_quick_actions_widget.dart';
+import 'package:na_regua/widgets/homescreen_quick_actions.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
-import 'package:na_regua/widgets/no_upcoming_appointments_widget.dart';
-import 'package:na_regua/widgets/welcome_back_widget.dart';
+import 'package:na_regua/widgets/no_upcoming_appointments.dart';
+import 'package:na_regua/widgets/welcome_back.dart';
 import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/widgets/booking_card.dart';
 
