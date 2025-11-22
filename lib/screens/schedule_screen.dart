@@ -1,18 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/models/service_model.dart';
+import 'package:na_regua/providers/navigation_provider.dart';
+import 'package:na_regua/providers/services_provider.dart';
+import 'package:na_regua/widgets/date_picker.dart';
+import 'package:na_regua/widgets/barber_picker.dart';
+import 'package:na_regua/widgets/service_picker.dart';
+import 'package:na_regua/widgets/timetable.dart';
+import 'package:na_regua/models/barber_model.dart';
 
-class ScheduleScreen extends StatefulWidget {
+class ScheduleScreen extends ConsumerStatefulWidget {
   const ScheduleScreen({super.key});
 
   @override
-  State<ScheduleScreen> createState() => _ScheduleScreenState();
+  ConsumerState<ScheduleScreen> createState() => _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends State<ScheduleScreen> {
+class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
+  ServiceModel? _selectedService;
   DateTime _selectedDate = DateTime.now();
+  BarberModel? _selectedBarber;
+  String? _selectedTime;
+
+  bool get isFormComplete {
+    return _selectedService != null &&
+        _selectedBarber != null &&
+        _selectedTime != null;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final showBack = ref.watch(navigationProvider).showBackButton;
+    final services = ref.watch(servicesProvider);
+
     return Scaffold(
+      appBar: showBack
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => ref.read(navigationProvider.notifier).goBack(),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+            )
+          : null,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -41,28 +72,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ),
               const SizedBox(height: 16),
               
-              _ServiceCard(
-                title: 'Corte de Cabelo',
-                duration: '30 min',
-                price: 'R\$ 40,00',
-                icon: Icons.content_cut,
-                onTap: () {},
-              ),
-              const SizedBox(height: 12),
-              _ServiceCard(
-                title: 'Barba',
-                duration: '20 min',
-                price: 'R\$ 25,00',
-                icon: Icons.face,
-                onTap: () {},
-              ),
-              const SizedBox(height: 12),
-              _ServiceCard(
-                title: 'Corte + Barba',
-                duration: '45 min',
-                price: 'R\$ 60,00',
-                icon: Icons.spa,
-                onTap: () {},
+              ServicePicker(
+                services: services,
+                onServiceSelected: (service) => setState(() => _selectedService = service),
               ),
               
               const SizedBox(height: 32),
@@ -73,73 +85,30 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              Card(
-                child: InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 90)),
-                    );
-                    if (date != null) {
-                      setState(() => _selectedDate = date);
-                    }
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Data Selecionada',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
+              DatePickerWidget(
+                selectedDate: _selectedDate,
+                onDateSelected: (date) => setState(() => _selectedDate = date),
+              ),
+              
+              const SizedBox(height: 32),
+
+              BarberPicker(
+                date: _selectedDate,
+                onBarberSelected: (barber) => setState(() {
+                  _selectedBarber = barber;
+                  _selectedTime = null; // Reset time when barber changes
+                }),
               ),
               
               const SizedBox(height: 32),
               
               // Time Selection
-              Text(
-                'Horários Disponíveis',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  '09:00',
-                  '10:00',
-                  '11:00',
-                  '14:00',
-                  '15:00',
-                  '16:00',
-                  '17:00',
-                  '18:00',
-                ].map((time) => _TimeChip(time: time)).toList(),
-              ),
+              if (_selectedBarber != null)
+                TimetableWidget(
+                  barber: _selectedBarber,
+                  date: _selectedDate,
+                  onTimeSelected: (time) => setState(() => _selectedTime = time),
+                ),
               
               const SizedBox(height: 32),
               
@@ -147,13 +116,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade de agendamento em desenvolvimento'),
-                      ),
-                    );
-                  },
+                  onPressed: isFormComplete
+                      ? () {
+                          final barberName = _selectedBarber?.name ?? 'Nenhum barbeiro selecionado';
+                          final serviceName = _selectedService?.name ?? 'Nenhum serviço selecionado';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Agendamento de $serviceName com $barberName às $_selectedTime em desenvolvimento'),
+                            ),
+                          );
+                          // return to home screen
+                          ref.read(navigationProvider.notifier).goBack();
+                        }
+                      : null,
                   child: const Text('Confirmar Agendamento'),
                 ),
               ),
@@ -164,102 +139,3 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 }
-
-class _ServiceCard extends StatelessWidget {
-  final String title;
-  final String duration;
-  final String price;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _ServiceCard({
-    required this.title,
-    required this.duration,
-    required this.price,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      duration,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                price,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TimeChip extends StatefulWidget {
-  final String time;
-
-  const _TimeChip({required this.time});
-
-  @override
-  State<_TimeChip> createState() => _TimeChipState();
-}
-
-class _TimeChipState extends State<_TimeChip> {
-  bool _isSelected = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilterChip(
-      label: Text(widget.time),
-      selected: _isSelected,
-      onSelected: (selected) {
-        setState(() => _isSelected = selected);
-      },
-      selectedColor: Theme.of(context).colorScheme.primary,
-      checkmarkColor: Theme.of(context).colorScheme.onPrimary,
-      labelStyle: TextStyle(
-        color: _isSelected 
-            ? Theme.of(context).colorScheme.onPrimary
-            : Theme.of(context).colorScheme.onSurface,
-      ),
-    );
-  }
-}
-

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'supabase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:na_regua/auth_provider.dart';
-import 'package:na_regua/task/task_list_page.dart';
 import 'package:na_regua/app_theme.dart';
 import 'package:na_regua/screens/welcome_screen.dart';
 
@@ -34,16 +33,6 @@ void main() async {
   );
 }
 
-class MainPage extends ConsumerWidget {
-  const MainPage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // return const Scaffold(body: Center(child: Text('Hello')));
-    return TaskListPage();
-  }
-}
-
 class AuthenticationWrapper extends ConsumerWidget {
   const AuthenticationWrapper({super.key});
 
@@ -53,11 +42,11 @@ class AuthenticationWrapper extends ConsumerWidget {
 
     return authStateAsync.when(
       data: (AuthState state) {
-        return state.session == null ? const SignInPage() : const MainPage();
+        return state.session == null ? const SignInPage() : const WelcomeScreen();
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, __) {
+      error: (error, _) {
         return Scaffold(body: Center(child: Text('Error: $error')));
       },
     );

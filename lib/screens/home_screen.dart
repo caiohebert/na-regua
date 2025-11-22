@@ -1,10 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/widgets/homescreen_quick_actions.dart';
+import 'package:na_regua/providers/navigation_provider.dart';
+import 'package:na_regua/widgets/no_upcoming_appointments.dart';
+import 'package:na_regua/widgets/welcome_back.dart';
+import 'package:na_regua/providers/booking_provider.dart';
+import 'package:na_regua/widgets/booking_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bookings = ref.watch(bookingsProvider);
+
+    final upcomingBookings = bookings
+        .where((b) => b.status == 'upcoming')
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final recentBookings = bookings
+        .where((b) => b.status != 'upcoming')
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -16,22 +35,7 @@ class HomeScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Olá! 👋',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Bem-vindo de volta',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
+                  WelcomeBackWidget(),
                   IconButton(
                     onPressed: () {
                       // TODO: Implement notifications
@@ -45,47 +49,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 32),
               
               // Quick Actions Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ações Rápidas',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _QuickActionButton(
-                            icon: Icons.calendar_today,
-                            label: 'Agendar',
-                            onTap: () {
-                              // TODO: Navigate to schedule
-                            },
-                          ),
-                          _QuickActionButton(
-                            icon: Icons.history,
-                            label: 'Histórico',
-                            onTap: () {
-                              // TODO: Navigate to history
-                            },
-                          ),
-                          _QuickActionButton(
-                            icon: Icons.favorite_outline,
-                            label: 'Favoritos',
-                            onTap: () {
-                              // TODO: Navigate to favorites
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              HomescreenQuickActionsWidget(),
               
               const SizedBox(height: 24),
               
@@ -95,39 +59,14 @@ class HomeScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 48,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Nenhum agendamento',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Agende seu próximo corte',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to schedule
-                        },
-                        child: const Text('Agendar Agora'),
-                      ),
-                    ],
-                  ),
+              if (upcomingBookings.isEmpty)
+                const NoUpcomingAppointmentsWidget()
+              else
+                Column(
+                  children: upcomingBookings
+                      .map((booking) => BookingCard(booking: booking))
+                      .toList(),
                 ),
-              ),
               
               const SizedBox(height: 24),
               
@@ -137,19 +76,26 @@ class HomeScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Center(
-                    child: Text(
-                      'Nenhum serviço realizado ainda',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[400],
+              if (recentBookings.isEmpty)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Center(
+                      child: Text(
+                        'Nenhum serviço realizado ainda',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[400],
+                            ),
                       ),
                     ),
                   ),
+                )
+              else
+                Column(
+                  children: recentBookings
+                      .map((booking) => BookingCard(booking: booking))
+                      .toList(),
                 ),
-              ),
             ],
           ),
         ),
@@ -157,41 +103,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-

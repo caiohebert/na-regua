@@ -1,34 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:na_regua/screens/home_screen.dart';
 import 'package:na_regua/screens/schedule_screen.dart';
 import 'package:na_regua/screens/profile_screen.dart';
+import 'package:na_regua/screens/bookings_screen.dart';
+import 'package:na_regua/providers/navigation_provider.dart';
 
-class MainScaffold extends StatefulWidget {
+class MainScaffold extends ConsumerWidget {
   const MainScaffold({super.key});
 
   @override
-  State<MainScaffold> createState() => _MainScaffoldState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navState = ref.watch(navigationProvider);
+    final currentIndex = navState.index;
 
-class _MainScaffoldState extends State<MainScaffold> {
-  int _currentIndex = 0;
+    final List<Widget> screens = const [
+      HomeScreen(),
+      ScheduleScreen(),
+      ProfileScreen(),
+      BookingsScreen(),
+    ];
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    ScheduleScreen(),
-    ProfileScreen(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: screens[currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+        currentIndex: currentIndex > 2 ? 0 : currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          ref.read(navigationProvider.notifier).setIndex(index);
         },
         items: const [
           BottomNavigationBarItem(
