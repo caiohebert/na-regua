@@ -1,5 +1,6 @@
 import '../models/barber_model.dart';
 import '../models/service_model.dart';
+import '../models/booking_model.dart';
 
 final List<BarberModel> dummyBarbers = [
   const BarberModel(
@@ -46,5 +47,22 @@ final List<BarberModel> dummyBarbers = [
       ServiceModel(name: 'Haircut', price: 45.0, durationMinutes: 30),
       ServiceModel(name: 'Beard Trim', price: 25.0, durationMinutes: 15),
     ],
+  ),
+];
+
+final List<BookingModel> dummyBookings = [
+  BookingModel(
+    id: '1',
+    barber: dummyBarbers[0],
+    service: dummyBarbers[0].services[0],
+    date: DateTime.now().add(const Duration(days: 1, hours: 2)),
+    status: 'upcoming',
+  ),
+  BookingModel(
+    id: '2',
+    barber: dummyBarbers[1],
+    service: dummyBarbers[1].services[0],
+    date: DateTime.now().subtract(const Duration(days: 5)),
+    status: 'completed',
   ),
 ];

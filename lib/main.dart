@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'supabase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:na_regua/auth_provider.dart';
-import 'package:na_regua/data/dummy_data.dart';
-import 'package:na_regua/widgets/barber_card.dart';
+import 'package:na_regua/pages/main_scaffold.dart';
 
 // Change to true to enable authentication
 // with Google Sign In
@@ -24,43 +23,13 @@ void main() async {
   runApp(
     const ProviderScope(
       child: MaterialApp(
-        home: authenticationEnabled ? AuthenticationWrapper() : MainPage(),
+        home: authenticationEnabled ? AuthenticationWrapper() : MainScaffold(),
       ),
     ),
   );
 }
 
-class MainPage extends ConsumerWidget {
-  const MainPage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Dark background
-      appBar: AppBar(
-        title: const Text('Available Barbers', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: dummyBarbers.length,
-                itemBuilder: (context, index) {
-                  return BarberCard(barber: dummyBarbers[index]);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// Removed MainPage class as it has been extracted to lib/pages/home_page.dart
 
 class AuthenticationWrapper extends ConsumerWidget {
   const AuthenticationWrapper({super.key});
@@ -71,11 +40,11 @@ class AuthenticationWrapper extends ConsumerWidget {
 
     return authStateAsync.when(
       data: (AuthState state) {
-        return state.session == null ? const SignInPage() : const MainPage();
+        return state.session == null ? const SignInPage() : const MainScaffold();
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, __) {
+      error: (error, _) {
         return Scaffold(body: Center(child: Text('Error: $error')));
       },
     );
