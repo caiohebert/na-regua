@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'supabase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:na_regua/auth_provider.dart';
-import 'package:na_regua/task/task_list_page.dart';
 
 // Change to true to enable authentication
 // with Google Sign In
@@ -34,8 +33,8 @@ class MainPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // return const Scaffold(body: Center(child: Text('Hello')));
-    return TaskListPage();
+    // TODO remove this placeholder
+    return const Scaffold(body: Center(child: Text('Hello')));
   }
 }
 
