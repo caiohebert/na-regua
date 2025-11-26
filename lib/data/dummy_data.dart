@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:na_regua/models/service_model.dart';
 
 import '../models/barber_model.dart';
-import '../models/service_model.dart';
 import '../models/booking_model.dart';
 
 final List<BarberModel> dummyBarbers = [
