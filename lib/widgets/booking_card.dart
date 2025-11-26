@@ -60,13 +60,75 @@ class CancelButton extends StatelessWidget {
 
   const CancelButton({super.key, required this.booking});
 
+  // Função para exibir o diálogo de confirmação
+  void _showCancelConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1F2024), // Mantendo o tema dark
+          title: const Text(
+            "Cancelar Agendamento?",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            "Tem certeza que deseja cancelar? Essa ação não pode ser desfeita e o horário ficará vago.",
+            style: TextStyle(color: Colors.grey),
+          ),
+          actions: [
+            // Botão NÃO (Voltar)
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text("Voltar", style: TextStyle(color: Colors.white)),
+            ),
+            // Botão SIM (Confirmar cancelamento)
+            TextButton(
+              onPressed: () async {
+                // 1. Fecha o diálogo primeiro
+                Navigator.of(dialogContext).pop();
+
+                // 2. Chama a atualização no banco de dados
+                await updateBooking(booking, 'canceled');
+
+                // 3. Exibe o aviso de sucesso (SnackBar)
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.redAccent,
+                      content: Row(
+                        children: const [
+                          Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Agendamento cancelado. O barbeiro foi notificado.",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                "Confirmar Cancelamento",
+                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.cancel, color: Colors.red),
-      onPressed: () async {
-        await updateBooking(booking, 'canceled');
-      },
+      icon: const Icon(Icons.cancel, color: Colors.red),
+      // Agora chamamos a função que abre o diálogo
+      onPressed: () => _showCancelConfirmation(context),
       style: IconButton.styleFrom(
         side: const BorderSide(color: Colors.red),
         shape: RoundedRectangleBorder(

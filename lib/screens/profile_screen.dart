@@ -1,8 +1,67 @@
+import 'dart:io'; // Necessário para manipular o arquivo da imagem
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Pacote para pegar a imagem
 import 'package:na_regua/screens/welcome_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+// Mudamos para StatefulWidget para poder atualizar a imagem na tela
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  File? _selectedImage; // Variável para guardar a imagem selecionada
+
+  // Função para abrir o seletor de imagem
+  Future<void> _pickImage(ImageSource source) async {
+    final ImagePicker picker = ImagePicker();
+    
+    try {
+      final XFile? image = await picker.pickImage(source: source);
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Erro ao selecionar imagem: $e');
+    }
+  }
+
+  // Função que mostra o menu (Câmera ou Galeria)
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeria'),
+              onTap: () {
+                Navigator.pop(context); // Fecha o menu
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Câmera'),
+              onTap: () {
+                Navigator.pop(context); // Fecha o menu
+                _pickImage(ImageSource.camera);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +86,24 @@ class ProfileScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(20.0),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: Icon(
-                          Icons.person,
-                          size: 40,
-                          color: Theme.of(context).colorScheme.onPrimary,
+                      // Lógica do Avatar
+                      GestureDetector(
+                        onTap: _showImagePickerOptions, // Permite clicar na foto também
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          // Se tiver imagem, mostra ela. Se não, mostra null (e cai no child)
+                          backgroundImage: _selectedImage != null 
+                              ? FileImage(_selectedImage!) 
+                              : null,
+                          // Se NÃO tiver imagem, mostra o ícone de pessoa
+                          child: _selectedImage == null
+                              ? Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                )
+                              : null,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -55,12 +125,12 @@ class ProfileScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+                      // Botão de alterar foto (Substituindo o antigo edit profile)
                       IconButton(
-                        onPressed: () {
-                          // TODO: Edit profile
-                        },
-                        icon: const Icon(Icons.edit),
+                        onPressed: _showImagePickerOptions,
+                        icon: const Icon(Icons.camera_alt_outlined),
                         color: Theme.of(context).colorScheme.primary,
+                        tooltip: 'Alterar foto',
                       ),
                     ],
                   ),
@@ -80,7 +150,7 @@ class ProfileScreen extends StatelessWidget {
               
               _ProfileMenuItem(
                 icon: Icons.person_outline,
-                title: 'Editar Perfil',
+                title: 'Editar Dados',
                 onTap: () {
                   // TODO: Navigate to edit profile
                 },
@@ -102,7 +172,7 @@ class ProfileScreen extends StatelessWidget {
               
               const SizedBox(height: 24),
               
-              // App Section
+              // App Section (Mantido igual)
               Text(
                 'Aplicativo',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -142,7 +212,7 @@ class ProfileScreen extends StatelessWidget {
               
               const SizedBox(height: 24),
               
-              // Logout Button
+              // Logout Button (Mantido igual)
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -190,6 +260,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+// Widget auxiliar mantido igual
 class _ProfileMenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -234,4 +305,3 @@ class _ProfileMenuItem extends StatelessWidget {
     );
   }
 }
-
