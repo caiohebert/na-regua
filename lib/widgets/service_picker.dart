@@ -25,10 +25,6 @@ class _ServicePickerState extends ConsumerState<ServicePicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Selecione o Serviço',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
         const SizedBox(height: 16),
         ...widget.services.map((service) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
