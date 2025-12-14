@@ -53,6 +53,7 @@ class _TimetableWidgetState extends ConsumerState<TimetableWidget> {
             if (times.isEmpty) {
               return const Text('Nenhum horário disponível.');
             }
+            times.sort();
             return Wrap(
               spacing: 12,
               runSpacing: 12,
