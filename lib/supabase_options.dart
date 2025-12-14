@@ -1,4 +1,6 @@
-const Map<Symbol, dynamic> supabaseOptions = {
-  #url: 'REPLACE WITH YOUR SUPABASE URL',
-  #anonKey: 'REPLACE WITH YOUR SUPABASE ANON KEY',
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+final Map<Symbol, dynamic> supabaseOptions = {
+  #url: dotenv.env['SUPABASE_URL']!,
+  #anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
 };
