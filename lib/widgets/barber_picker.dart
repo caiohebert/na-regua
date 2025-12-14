@@ -23,7 +23,7 @@ class _BarberPickerState extends ConsumerState<BarberPicker> {
 
   @override
   Widget build(BuildContext context) {
-    final barbers = ref.watch(barbersProvider(widget.date));
+    final barbersAsync = ref.watch(barbersProvider(widget.date));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,19 +33,25 @@ class _BarberPickerState extends ConsumerState<BarberPicker> {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),
-        ...barbers.map((barber) {
-          final isSelected = _selectedBarber == barber;
-          return BarberCard(
-            barber: barber,
-            isSelected: isSelected,
-            onTap: () {
-              setState(() {
-                _selectedBarber = barber;
-              });
-              widget.onBarberSelected(barber);
-            },
-          );
-        }),
+        barbersAsync.when(
+          data: (barbers) => Column(
+            children: barbers.map((barber) {
+              final isSelected = _selectedBarber?.id == barber.id;
+              return BarberCard(
+                barber: barber,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    _selectedBarber = barber;
+                  });
+                  widget.onBarberSelected(barber);
+                },
+              );
+            }).toList(),
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Error: $error')),
+        ),
       ],
     );
   }

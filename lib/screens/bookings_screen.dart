@@ -9,7 +9,7 @@ class BookingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bookings = ref.watch(bookingsProvider);
+    final bookingsAsync = ref.watch(bookingsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -22,21 +22,25 @@ class BookingsScreen extends ConsumerWidget {
           onPressed: () => ref.read(navigationProvider.notifier).goBack(),
         ),
       ),
-      body: bookings.isEmpty
-          ? const Center(
-              child: Text(
-                'Nenhum agendamento encontrado',
-                style: TextStyle(color: Colors.grey),
+      body: bookingsAsync.when(
+        data: (bookings) => bookings.isEmpty
+            ? const Center(
+                child: Text(
+                  'Nenhum agendamento encontrado',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: bookings.length,
+                itemBuilder: (context, index) {
+                  final booking = bookings[index];
+                  return BookingCard(booking: booking);
+                },
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: bookings.length,
-              itemBuilder: (context, index) {
-                final booking = bookings[index];
-                return BookingCard(booking: booking);
-              },
-            ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(child: Text('Error: $error')),
+      ),
     );
   }
 }

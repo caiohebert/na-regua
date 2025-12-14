@@ -30,7 +30,7 @@ class BarberCard extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundImage: NetworkImage(barber.imageUrl),
+              backgroundImage: barber.imageUrl != null ? NetworkImage(barber.imageUrl!) : null,
               radius: 24,
             ),
             const SizedBox(width: 16),
@@ -54,7 +54,7 @@ class BarberCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        barber.rating.toString(),
+                        barber.rating?.toString() ?? 'N/A',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(width: 12),
@@ -66,7 +66,7 @@ class BarberCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          barber.location,
+                          barber.location ?? 'Unknown',
                           style: Theme.of(context).textTheme.bodySmall,
                           overflow: TextOverflow.ellipsis,
                         ),

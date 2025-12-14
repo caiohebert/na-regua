@@ -12,10 +12,14 @@ class StatusText extends StatelessWidget {
   Color get color {
     switch (status) {
       case 'upcoming':
+      case 'PENDING':
+      case 'CONFIRMED':
         return const Color(0xFFEDB33C);
       case 'completed':
+      case 'COMPLETED':
         return Colors.green;
       case 'canceled':
+      case 'CANCELLED':
         return Colors.red;
       default:
         return Colors.grey;
@@ -25,13 +29,17 @@ class StatusText extends StatelessWidget {
   String get displayText {
     switch (status) {
       case 'upcoming':
+      case 'PENDING':
+      case 'CONFIRMED':
         return 'AGENDADO';
       case 'completed':
+      case 'COMPLETED':
         return 'CONCLUÍDO';
       case 'canceled':
+      case 'CANCELLED':
         return 'CANCELADO';
       default:
-        throw Exception('Unknown status');
+        return status.toUpperCase();
     }
   }
 
@@ -188,7 +196,7 @@ class BookingCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Image.network(
-                  booking.barber.imageUrl,
+                  booking.barber?.imageUrl ?? 'https://via.placeholder.com/150',
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,
@@ -206,7 +214,7 @@ class BookingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.barber.name,
+                      booking.barber?.name ?? 'Unknown Barber',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -214,7 +222,7 @@ class BookingCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      booking.service.name,
+                      booking.service?.name ?? 'Unknown Service',
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
@@ -225,7 +233,7 @@ class BookingCard extends StatelessWidget {
               ),
               StatusText(status: booking.status, booking: booking),
               const SizedBox(width: 8),
-              if (booking.status == 'upcoming') ...[
+              if (booking.status == 'upcoming' || booking.status == 'PENDING' || booking.status == 'CONFIRMED') ...[
                 const SizedBox(width: 8),
                 CancelButton(booking: booking),
               ],

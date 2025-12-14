@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
 
 class ServiceModel {
+  final String id;
   final String name;
+  final String? description;
+  final int duration; // minutes
   final double price;
-  final int durationMinutes;
-  final IconData icon;
+  final String? coverUrl;
+
+  // Helper for UI compatibility if needed
+  IconData get icon => Icons.cut; 
+  int get durationMinutes => duration;
 
   const ServiceModel({
+    required this.id,
     required this.name,
+    this.description,
+    required this.duration,
     required this.price,
-    required this.durationMinutes,
-    this.icon = Icons.cut, // Default icon
+    this.coverUrl,
   });
+
+  factory ServiceModel.fromJson(Map<String, dynamic> json) {
+    return ServiceModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      duration: json['duration'] as int,
+      price: (json['price'] as num).toDouble(),
+      coverUrl: json['cover'] as String?,
+    );
+  }
 }

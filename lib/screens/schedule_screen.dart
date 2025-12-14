@@ -31,7 +31,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final showBack = ref.watch(navigationProvider).showBackButton;
-    final services = ref.watch(servicesProvider);
+    final servicesAsync = ref.watch(servicesProvider);
 
     return Scaffold(
       appBar: showBack
@@ -72,9 +72,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               ),
               const SizedBox(height: 16),
               
-              ServicePicker(
-                services: services,
-                onServiceSelected: (service) => setState(() => _selectedService = service),
+              servicesAsync.when(
+                data: (services) => ServicePicker(
+                  services: services,
+                  onServiceSelected: (service) => setState(() => _selectedService = service),
+                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error')),
               ),
               
               const SizedBox(height: 32),
