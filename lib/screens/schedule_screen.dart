@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:na_regua/db/booking_db.dart';
-import 'package:na_regua/db/db_types.dart';
 import 'package:na_regua/models/service_model.dart';
+import 'package:na_regua/providers/barbers_provider.dart';
+import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
+import 'package:na_regua/providers/timetable_provider.dart';
 import 'package:na_regua/utils/date.dart';
 import 'package:na_regua/widgets/date_picker.dart';
 import 'package:na_regua/widgets/barber_picker.dart';
@@ -127,6 +129,18 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                       ? () async {
                         // form is complete so parameters should never be null
                         await createBooking(_selectedService!, _selectedBarber!, getDate(_selectedDate), _selectedTime!);
+
+                        // Refresh shared bookings data (Home + Bookings screens)
+                        ref.invalidate(bookingsProvider);
+
+                        // Refresh availability for the selected day/barber
+                        ref.invalidate(barbersProvider(_selectedDate));
+                        ref.invalidate(
+                          timetableProvider(
+                            TimetableParams(barber: _selectedBarber, date: _selectedDate),
+                          ),
+                        );
+
                         final barberName = _selectedBarber!.name;
                         final serviceName = _selectedService!.name;
                           ScaffoldMessenger.of(context).showSnackBar(

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:na_regua/db/db_types.dart';
-import 'package:na_regua/utils/date.dart';
+import 'package:na_regua/providers/booking_provider.dart';
+import 'package:na_regua/providers/barbers_provider.dart';
+import 'package:na_regua/providers/timetable_provider.dart';
 import '../models/booking_model.dart';
 import '../db/booking_db.dart';
 
@@ -65,13 +67,13 @@ class StatusText extends StatelessWidget {
   }
 }
 
-class CancelButton extends StatelessWidget {
+class CancelButton extends ConsumerWidget {
   final BookingModel booking;
 
   const CancelButton({super.key, required this.booking});
 
   // Função para exibir o diálogo de confirmação
-  void _showCancelConfirmation(BuildContext context) {
+  void _showCancelConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -100,7 +102,18 @@ class CancelButton extends StatelessWidget {
                 // 2. Chama a atualização no banco de dados
                 await cancelBooking(booking);
 
-                // 3. Exibe o aviso de sucesso (SnackBar)
+                // 3. Recarrega os agendamentos para atualizar status/botões
+                ref.invalidate(bookingsProvider);
+
+                // 4. Atualiza disponibilidade (cancelamento libera o horário)
+                ref.invalidate(barbersProvider(booking.date));
+                ref.invalidate(
+                  timetableProvider(
+                    TimetableParams(barber: booking.barber, date: booking.date),
+                  ),
+                );
+
+                // 5. Exibe o aviso de sucesso (SnackBar)
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -134,11 +147,11 @@ class CancelButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
       icon: const Icon(Icons.cancel, color: Colors.red),
       // Agora chamamos a função que abre o diálogo
-      onPressed: () => _showCancelConfirmation(context),
+      onPressed: () => _showCancelConfirmation(context, ref),
       style: IconButton.styleFrom(
         side: const BorderSide(color: Colors.red),
         shape: RoundedRectangleBorder(
