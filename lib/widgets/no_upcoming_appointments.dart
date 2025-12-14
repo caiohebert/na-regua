@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class NoUpcomingAppointmentsWidget extends StatelessWidget {
+import 'package:na_regua/providers/navigation_provider.dart';
+
+class NoUpcomingAppointmentsWidget extends ConsumerWidget {
   const NoUpcomingAppointmentsWidget({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -32,7 +35,7 @@ class NoUpcomingAppointmentsWidget extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // TODO: Navigate to schedule
+                ref.read(navigationProvider.notifier).navigateTo(1);
               },
               child: const Text('Agendar Agora'),
             ),
