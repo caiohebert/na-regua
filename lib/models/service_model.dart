@@ -9,6 +9,7 @@ class ServiceModel {
   final String? coverUrl;
 
   // Helper for UI compatibility if needed
+  // TODO allow services to have different icons?
   IconData get icon => Icons.cut; 
 
   const ServiceModel({

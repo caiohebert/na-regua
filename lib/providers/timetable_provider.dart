@@ -32,15 +32,16 @@ final timetableProvider = FutureProvider.family<List<String>, TimetableParams>((
 
   final supabase = Supabase.instance.client;
 
+  final bookingDate = getDate(params.date);
   final response = await supabase
       .from('time_slots')
       .select()
       .eq('barber_id', params.barber!.id)
-      .eq('date', getDate(params.date))
+      .eq('date', bookingDate)
       .eq('status', 'AVAILABLE');
   final data = response as List<dynamic>;
 
   return data
-      .map((e) => castTimeZoneToLocal(getDate(params.date), (e as Map<String, dynamic>)['time'] as String))
+      .map((e) => getFormattedTime(buildDateTime(bookingDate, (e as Map<String, dynamic>)['time'] as String)))
       .toList();
 });

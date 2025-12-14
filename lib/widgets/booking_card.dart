@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:na_regua/db/db_types.dart';
+import 'package:na_regua/utils/date.dart';
 import '../models/booking_model.dart';
 import '../db/booking_db.dart';
 
@@ -96,7 +98,7 @@ class CancelButton extends StatelessWidget {
                 Navigator.of(dialogContext).pop();
 
                 // 2. Chama a atualização no banco de dados
-                await updateBooking(booking, 'canceled');
+                await cancelBooking(booking);
 
                 // 3. Exibe o aviso de sucesso (SnackBar)
                 if (context.mounted) {

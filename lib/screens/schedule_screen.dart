@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/db/booking_db.dart';
+import 'package:na_regua/db/db_types.dart';
 import 'package:na_regua/models/service_model.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
+import 'package:na_regua/utils/date.dart';
 import 'package:na_regua/widgets/date_picker.dart';
 import 'package:na_regua/widgets/barber_picker.dart';
 import 'package:na_regua/widgets/service_picker.dart';
@@ -121,17 +124,19 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isFormComplete
-                      ? () {
-                          final barberName = _selectedBarber?.name ?? 'Nenhum barbeiro selecionado';
-                          final serviceName = _selectedService?.name ?? 'Nenhum serviço selecionado';
+                      ? () async {
+                        // form is complete so parameters should never be null
+                        await createBooking(_selectedService!, _selectedBarber!, getDate(_selectedDate), _selectedTime!);
+                        final barberName = _selectedBarber!.name;
+                        final serviceName = _selectedService!.name;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Agendamento de $serviceName com $barberName às $_selectedTime em desenvolvimento'),
+                              content: Text('Agendamento de $serviceName com $barberName às $_selectedTime realizado'),
                             ),
                           );
-                          // return to home screen
-                          ref.read(navigationProvider.notifier).goBack();
-                        }
+                        // return to home screen
+                        ref.read(navigationProvider.notifier).goBack();
+                      }
                       : null,
                   child: const Text('Confirmar Agendamento'),
                 ),
