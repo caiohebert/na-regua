@@ -4,19 +4,18 @@ class ServiceModel {
   final String id;
   final String name;
   final String? description;
-  final int duration; // minutes
+  final int durationMinutes; // minutes
   final double price;
   final String? coverUrl;
 
   // Helper for UI compatibility if needed
   IconData get icon => Icons.cut; 
-  int get durationMinutes => duration;
 
   const ServiceModel({
     required this.id,
     required this.name,
     this.description,
-    required this.duration,
+    required this.durationMinutes,
     required this.price,
     this.coverUrl,
   });
@@ -26,7 +25,7 @@ class ServiceModel {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
-      duration: json['duration'] as int,
+      durationMinutes: json['duration'] as int,
       price: (json['price'] as num).toDouble(),
       coverUrl: json['cover'] as String?,
     );
