@@ -11,17 +11,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bookings = ref.watch(bookingsProvider);
-
-    final upcomingBookings = bookings
-        .where((b) => b.status == 'upcoming')
-        .toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    final recentBookings = bookings
-        .where((b) => b.status != 'upcoming')
-        .toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    final bookingsAsync = ref.watch(bookingsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -47,7 +37,6 @@ class HomeScreen extends ConsumerWidget {
               
               const SizedBox(height: 32),
               
-              // Quick Actions Card
               HomescreenQuickActionsWidget(),
               
               const SizedBox(height: 24),
@@ -58,14 +47,25 @@ class HomeScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              if (upcomingBookings.isEmpty)
-                const NoUpcomingAppointmentsWidget()
-              else
-                Column(
-                  children: upcomingBookings
-                      .map((booking) => BookingCard(booking: booking))
-                      .toList(),
-                ),
+              bookingsAsync.when(
+                data: (bookings) {
+                  final upcomingBookings = bookings
+                      .where((b) => b.status == 'PENDING' || b.status == 'CONFIRMED' || b.status == 'upcoming')
+                      .toList()
+                    ..sort((a, b) => a.date.compareTo(b.date));
+
+                  if (upcomingBookings.isEmpty) {
+                    return const NoUpcomingAppointmentsWidget();
+                  }
+                  return Column(
+                    children: upcomingBookings
+                        .map((booking) => BookingCard(booking: booking))
+                        .toList(),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Text('Error: $error'),
+              ),
               
               const SizedBox(height: 24),
               
@@ -75,26 +75,37 @@ class HomeScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              if (recentBookings.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text(
-                        'Nenhum serviço realizado ainda',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[400],
-                            ),
+              bookingsAsync.when(
+                data: (bookings) {
+                  final recentBookings = bookings
+                      .where((b) => b.status == 'COMPLETED' || b.status == 'CANCELLED' || (b.status != 'PENDING' && b.status != 'CONFIRMED' && b.status != 'upcoming'))
+                      .toList()
+                    ..sort((a, b) => b.date.compareTo(a.date));
+
+                  if (recentBookings.isEmpty) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Center(
+                          child: Text(
+                            'Nenhum serviço realizado ainda',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey[400],
+                                ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                )
-              else
-                Column(
-                  children: recentBookings
-                      .map((booking) => BookingCard(booking: booking))
-                      .toList(),
-                ),
+                    );
+                  }
+                  return Column(
+                    children: recentBookings
+                        .map((booking) => BookingCard(booking: booking))
+                        .toList(),
+                  );
+                },
+                loading: () => const SizedBox(),
+                error: (error, stack) => const SizedBox(),
+              ),
             ],
           ),
         ),

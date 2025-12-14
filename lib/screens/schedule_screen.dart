@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/db/booking_db.dart';
 import 'package:na_regua/models/service_model.dart';
+import 'package:na_regua/providers/barbers_provider.dart';
+import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
+import 'package:na_regua/providers/timetable_provider.dart';
+import 'package:na_regua/utils/date.dart';
 import 'package:na_regua/widgets/date_picker.dart';
 import 'package:na_regua/widgets/barber_picker.dart';
 import 'package:na_regua/widgets/service_picker.dart';
@@ -31,7 +36,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final showBack = ref.watch(navigationProvider).showBackButton;
-    final services = ref.watch(servicesProvider);
+    final servicesAsync = ref.watch(servicesProvider);
 
     return Scaffold(
       appBar: showBack
@@ -72,9 +77,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               ),
               const SizedBox(height: 16),
               
-              ServicePicker(
-                services: services,
-                onServiceSelected: (service) => setState(() => _selectedService = service),
+              servicesAsync.when(
+                data: (services) => ServicePicker(
+                  services: services,
+                  onServiceSelected: (service) => setState(() => _selectedService = service),
+                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error')),
               ),
               
               const SizedBox(height: 32),
@@ -117,17 +126,31 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isFormComplete
-                      ? () {
-                          final barberName = _selectedBarber?.name ?? 'Nenhum barbeiro selecionado';
-                          final serviceName = _selectedService?.name ?? 'Nenhum serviço selecionado';
+                      ? () async {
+                        // form is complete so parameters should never be null
+                        await createBooking(_selectedService!, _selectedBarber!, getDate(_selectedDate), _selectedTime!);
+
+                        // Refresh shared bookings data (Home + Bookings screens)
+                        ref.invalidate(bookingsProvider);
+
+                        // Refresh availability for the selected day/barber
+                        ref.invalidate(barbersProvider(_selectedDate));
+                        ref.invalidate(
+                          timetableProvider(
+                            TimetableParams(barber: _selectedBarber, date: _selectedDate),
+                          ),
+                        );
+
+                        final barberName = _selectedBarber!.name;
+                        final serviceName = _selectedService!.name;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Agendamento de $serviceName com $barberName às $_selectedTime em desenvolvimento'),
+                              content: Text('Agendamento de $serviceName com $barberName às $_selectedTime realizado'),
                             ),
                           );
-                          // return to home screen
-                          ref.read(navigationProvider.notifier).goBack();
-                        }
+                        // return to home screen
+                        ref.read(navigationProvider.notifier).goBack();
+                      }
                       : null,
                   child: const Text('Confirmar Agendamento'),
                 ),

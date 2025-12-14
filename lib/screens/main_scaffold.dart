@@ -17,14 +17,14 @@ class MainScaffold extends ConsumerWidget {
     final List<Widget> screens = const [
       HomeScreen(),
       ScheduleScreen(),
-      ProfileScreen(),
       BookingsScreen(),
+      ProfileScreen(),
     ];
 
     return Scaffold(
       body: screens[currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex > 2 ? 0 : currentIndex,
+        currentIndex: currentIndex > 3 ? 0 : currentIndex,
         onTap: (index) {
           ref.read(navigationProvider.notifier).setIndex(index);
         },
@@ -38,6 +38,11 @@ class MainScaffold extends ConsumerWidget {
             icon: Icon(Icons.calendar_today_outlined),
             activeIcon: Icon(Icons.calendar_today),
             label: 'Agendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
+            label: 'Agendamentos',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

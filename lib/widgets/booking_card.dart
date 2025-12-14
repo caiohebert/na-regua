@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:na_regua/providers/booking_provider.dart';
+import 'package:na_regua/providers/barbers_provider.dart';
+import 'package:na_regua/providers/timetable_provider.dart';
 import '../models/booking_model.dart';
 import '../db/booking_db.dart';
 
@@ -12,10 +16,14 @@ class StatusText extends StatelessWidget {
   Color get color {
     switch (status) {
       case 'upcoming':
+      case 'PENDING':
+      case 'CONFIRMED':
         return const Color(0xFFEDB33C);
       case 'completed':
+      case 'COMPLETED':
         return Colors.green;
       case 'canceled':
+      case 'CANCELLED':
         return Colors.red;
       default:
         return Colors.grey;
@@ -25,13 +33,17 @@ class StatusText extends StatelessWidget {
   String get displayText {
     switch (status) {
       case 'upcoming':
+      case 'PENDING':
+      case 'CONFIRMED':
         return 'AGENDADO';
       case 'completed':
+      case 'COMPLETED':
         return 'CONCLUÍDO';
       case 'canceled':
+      case 'CANCELLED':
         return 'CANCELADO';
       default:
-        throw Exception('Unknown status');
+        return status.toUpperCase();
     }
   }
 
@@ -55,13 +67,13 @@ class StatusText extends StatelessWidget {
   }
 }
 
-class CancelButton extends StatelessWidget {
+class CancelButton extends ConsumerWidget {
   final BookingModel booking;
 
   const CancelButton({super.key, required this.booking});
 
   // Função para exibir o diálogo de confirmação
-  void _showCancelConfirmation(BuildContext context) {
+  void _showCancelConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -88,9 +100,20 @@ class CancelButton extends StatelessWidget {
                 Navigator.of(dialogContext).pop();
 
                 // 2. Chama a atualização no banco de dados
-                await updateBooking(booking, 'canceled');
+                await cancelBooking(booking);
 
-                // 3. Exibe o aviso de sucesso (SnackBar)
+                // 3. Recarrega os agendamentos para atualizar status/botões
+                ref.invalidate(bookingsProvider);
+
+                // 4. Atualiza disponibilidade (cancelamento libera o horário)
+                ref.invalidate(barbersProvider(booking.date));
+                ref.invalidate(
+                  timetableProvider(
+                    TimetableParams(barber: booking.barber, date: booking.date),
+                  ),
+                );
+
+                // 5. Exibe o aviso de sucesso (SnackBar)
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -124,11 +147,11 @@ class CancelButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
       icon: const Icon(Icons.cancel, color: Colors.red),
       // Agora chamamos a função que abre o diálogo
-      onPressed: () => _showCancelConfirmation(context),
+      onPressed: () => _showCancelConfirmation(context, ref),
       style: IconButton.styleFrom(
         side: const BorderSide(color: Colors.red),
         shape: RoundedRectangleBorder(
@@ -188,7 +211,7 @@ class BookingCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Image.network(
-                  booking.barber.imageUrl,
+                  booking.barber?.imageUrl ?? 'https://via.placeholder.com/150',
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,
@@ -206,7 +229,7 @@ class BookingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.barber.name,
+                      booking.barber?.name ?? 'Unknown Barber',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -214,7 +237,7 @@ class BookingCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      booking.service.name,
+                      booking.service?.name ?? 'Unknown Service',
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
@@ -225,7 +248,7 @@ class BookingCard extends StatelessWidget {
               ),
               StatusText(status: booking.status, booking: booking),
               const SizedBox(width: 8),
-              if (booking.status == 'upcoming') ...[
+              if (booking.status == 'upcoming' || booking.status == 'PENDING' || booking.status == 'CONFIRMED') ...[
                 const SizedBox(width: 8),
                 CancelButton(booking: booking),
               ],

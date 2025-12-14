@@ -34,7 +34,7 @@ class HomescreenQuickActionsWidget extends ConsumerWidget {
                   icon: Icons.history,
                   label: 'Histórico',
                   onTap: () {
-                    ref.read(navigationProvider.notifier).navigateTo(3, showBackButton: true);
+                    ref.read(navigationProvider.notifier).navigateTo(2, showBackButton: true);
                   },
                 ),
                 _QuickActionButton(
