@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/auth_provider.dart';
 import 'package:na_regua/screens/main_scaffold.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -30,18 +33,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
-      
-      // Simulate registration - Replace with actual authentication later
-      await Future.delayed(const Duration(seconds: 1));
-      
-      if (mounted) {
-        setState(() => _isLoading = false);
-        
-        // Navigate to main app
-        Navigator.pushReplacement(
+
+      try {
+        final res = await ref.read(authProvider.notifier).signUpWithPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+              fullName: _nameController.text,
+            );
+
+        if (!mounted) return;
+        // If email confirmations are enabled in Supabase, session may be null.
+        if (res.session == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Conta criada! Confirme seu e-mail para entrar.'),
+            ),
+          );
+          Navigator.pop(context);
+          return;
+        }
+
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const MainScaffold()),
+          MaterialPageRoute(builder: (_) => const MainScaffold()),
+          (route) => false,
         );
+      } on AuthException catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao criar conta. Tente novamente.')),
+        );
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }

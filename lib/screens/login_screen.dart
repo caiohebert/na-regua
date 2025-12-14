@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/auth_provider.dart';
 import 'package:na_regua/screens/main_scaffold.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -25,19 +28,62 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
-      
-      // Simulate login - Replace with actual authentication later
-      await Future.delayed(const Duration(seconds: 1));
-      
-      if (mounted) {
-        setState(() => _isLoading = false);
-        
-        // Navigate to main app
-        Navigator.pushReplacement(
+
+      try {
+        await ref.read(authProvider.notifier).signInWithPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            );
+
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const MainScaffold()),
+          MaterialPageRoute(builder: (_) => const MainScaffold()),
+          (route) => false,
         );
+      } on AuthException catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao entrar. Tente novamente.')),
+        );
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _handleResetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe um e-mail válido primeiro.')),
+      );
+      return;
+    }
+
+    try {
+      await ref.read(authProvider.notifier).resetPassword(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enviamos um e-mail para redefinir sua senha.'),
+        ),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao enviar e-mail.')),
+      );
     }
   }
 
@@ -135,12 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      // TODO: Implement forgot password
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
-                        ),
-                      );
+                      _handleResetPassword();
                     },
                     child: const Text('Esqueceu a senha?'),
                   ),
@@ -182,12 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Social Login Options (placeholder for future)
                 OutlinedButton.icon(
                   onPressed: () {
-                    // TODO: Implement Google Sign In
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Login com Google em desenvolvimento'),
-                      ),
-                    );
+                    ref.read(authProvider.notifier).signInWithGoogle();
                   },
                   icon: const Icon(Icons.g_mobiledata, size: 28),
                   label: const Text('Continuar com Google'),

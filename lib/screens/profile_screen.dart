@@ -1,17 +1,20 @@
 import 'dart:io'; // Necessário para manipular o arquivo da imagem
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart'; // Pacote para pegar a imagem
+import 'package:na_regua/auth_provider.dart';
 import 'package:na_regua/screens/welcome_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Mudamos para StatefulWidget para poder atualizar a imagem na tela
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   File? _selectedImage; // Variável para guardar a imagem selecionada
 
   // Função para abrir o seletor de imagem
@@ -65,6 +68,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final fullName = (user?.userMetadata?['full_name'] as String?)?.trim();
+    final displayName = (fullName != null && fullName.isNotEmpty)
+        ? fullName
+        : (user?.email ?? 'Usuário');
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -112,12 +121,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Usuário',
+                              displayName,
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'usuario@email.com',
+                              user?.email ?? '',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: Colors.grey[400],
                               ),
@@ -228,8 +237,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: const Text('Cancelar'),
                           ),
                           ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               Navigator.pop(context);
+                              await ref.read(authProvider.notifier).signOut();
+                              if (!context.mounted) return;
                               Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(

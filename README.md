@@ -2,6 +2,61 @@
 
 A new Flutter project.
 
+## Supabase authentication
+
+This app uses Supabase Auth and routes based on the current session:
+
+- Logged out: `WelcomeScreen` (from `lib/screens/welcome_screen.dart`)
+- Logged in: `MainScaffold` (from `lib/screens/main_scaffold.dart`)
+
+### 1) Configure environment
+
+Create a `.env` file at the project root:
+
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Supabase is initialized in `lib/main.dart` using `lib/supabase_options.dart`.
+
+### 2) Enable providers in Supabase
+
+- Email/Password: enable in Supabase Dashboard → Authentication → Providers
+- (Optional) Google OAuth: enable and configure redirect URLs for your target platforms.
+
+### 2.1) Configure redirect URLs (required for email confirmation links)
+
+In Supabase Dashboard → Authentication → URL Configuration:
+
+- Add this Redirect URL:
+	- `na-regua://auth-callback`
+
+If you see `AuthException(message: Code verifier could not be found in local storage...)`, it usually means the confirmation link was opened in a different app/browser/storage than the one that initiated the sign-up (PKCE verifier missing). Using the deep link above ensures the callback returns to the app.
+
+### Linux note (desktop)
+
+On Linux, custom schemes like `na-regua://...` only work if the scheme is registered with the OS.
+If you see a “choose application to open this link” prompt, it means no default handler is registered yet.
+
+To register it locally (per-user):
+
+```bash
+flutter build linux --release
+chmod +x tools/register_linux_url_scheme.sh
+./tools/register_linux_url_scheme.sh
+```
+
+### 3) Where auth is implemented
+
+- Providers: `lib/auth_provider.dart`
+	- `sessionProvider`: emits the current `Session?`
+	- `authProvider`: methods for sign-in/sign-up/reset/sign-out
+- UI:
+	- `lib/screens/login_screen.dart` (email/password, reset, Google OAuth)
+	- `lib/screens/register_screen.dart` (sign-up)
+	- `lib/screens/profile_screen.dart` (shows current user and sign-out)
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
