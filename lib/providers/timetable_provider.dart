@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/barber_model.dart';
-import '../data/dummy_data.dart';
+import '../utils/date.dart';
 
 class TimetableParams {
   final BarberModel? barber;
@@ -25,14 +26,21 @@ class TimetableParams {
 }
 
 final timetableProvider = FutureProvider.family<List<String>, TimetableParams>((ref, params) async {
-  // Simulate network delay
-  await Future.delayed(const Duration(milliseconds: 500));
-
   if (params.barber == null) {
     return [];
   }
 
-  // Mock logic: different barbers have different schedules or just random for now
-  // In a real app, this would fetch from backend based on barberId and date
-  return dummyTimetable[params.barber!.name] ?? [];
+  final supabase = Supabase.instance.client;
+
+  final response = await supabase
+      .from('time_slots')
+      .select()
+      .eq('barber_id', params.barber!.id)
+      .eq('date', getDate(params.date))
+      .eq('status', 'AVAILABLE');
+  final data = response as List<dynamic>;
+
+  return data
+      .map((e) => castTimeZoneToLocal(getDate(params.date), (e as Map<String, dynamic>)['time'] as String))
+      .toList();
 });
