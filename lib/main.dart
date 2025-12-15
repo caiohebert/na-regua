@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:app_links/app_links.dart';
 import 'supabase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:na_regua/auth_provider.dart';
 import 'package:na_regua/app_theme.dart';
 import 'package:na_regua/screens/welcome_screen.dart';
 import 'package:na_regua/screens/main_scaffold.dart';
-import 'dart:async';
-import 'package:flutter/foundation.dart';
 
 // Sample supbase_options.dart file:
 //
@@ -38,50 +35,6 @@ class AppRoot extends StatefulWidget {
 }
 
 class _AppRootState extends State<AppRoot> {
-  late final AppLinks _appLinks;
-  StreamSubscription<Uri>? _sub;
-
-  Future<void> _handleAuthCallbackUri(Uri uri) async {
-    final code = uri.queryParameters['code'];
-    if (code == null || code.isEmpty) return;
-
-    try {
-      await Supabase.instance.client.auth.exchangeCodeForSession(code);
-    } on AuthException catch (e) {
-      debugPrint('Auth callback error: ${e.message}');
-    } catch (e) {
-      debugPrint('Auth callback error: $e');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _appLinks = AppLinks();
-
-    // Web OAuth callback returns to the current URL (http/https). Handle it on startup.
-    if (kIsWeb) {
-      // Fire-and-forget; auth state will update the UI once session is set.
-      unawaited(_handleAuthCallbackUri(Uri.base));
-    }
-
-    // This stream provides the initial link (cold start) and subsequent links.
-    _sub = _appLinks.uriLinkStream.listen(
-      (uri) async {
-        await _handleAuthCallbackUri(uri);
-      },
-      onError: (err) {
-        debugPrint('Deep link error: $err');
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

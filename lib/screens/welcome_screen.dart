@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:na_regua/screens/login_screen.dart';
-import 'package:na_regua/screens/register_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/auth_provider.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -45,28 +45,11 @@ class WelcomeScreen extends StatelessWidget {
               ),
               
               const Spacer(),
-              
-              // Login Button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  );
-                },
-                child: const Text('Entrar'),
-              ),
-              const SizedBox(height: 16),
-              
-              // Create Account Button
-              OutlinedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                  );
-                },
-                child: const Text('Criar Conta'),
+
+              ElevatedButton.icon(
+                onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
+                icon: const Icon(Icons.g_mobiledata, size: 28),
+                label: const Text('Continuar com Google'),
               ),
               
               const SizedBox(height: 32),

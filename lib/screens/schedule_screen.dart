@@ -143,11 +143,15 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
                         final barberName = _selectedBarber!.name;
                         final serviceName = _selectedService!.name;
+                        // flutter analyze complains without this if, don't know why
+                        // see https://stackoverflow.com/questions/68871880/do-not-use-buildcontexts-across-async-gaps for fix
+                        if (context.mounted){
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Agendamento de $serviceName com $barberName às $_selectedTime realizado'),
                             ),
                           );
+                        }
                         // return to home screen
                         ref.read(navigationProvider.notifier).goBack();
                       }

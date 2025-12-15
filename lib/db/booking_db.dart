@@ -39,7 +39,7 @@ Future<void> createBooking(
     barber,
     bookedDate,
     bookedTime,
-    AppointmentStatus.CONFIRMED
+    AppointmentStatus.confirmed
   );
   if (existingBooking.isNotEmpty) {
     throw Exception('Booking already exists for the selected slot.');
@@ -52,7 +52,7 @@ Future<void> createBooking(
       .eq('date', bookedDate)
       // convert HH:MM to HH:MM:SS for matching
       .eq('time', '$bookedTime:00')
-      .eq('status', TimeSlotStatus.AVAILABLE.name)
+      .eq('status', TimeSlotStatus.available.name)
       .single();
 
   await supabase
@@ -64,13 +64,13 @@ Future<void> createBooking(
         'time_slot_id': timeslot['id'],
         'date': bookedDate,
         'time': "$bookedTime:00",
-        'status': AppointmentStatus.CONFIRMED.name,
+        'status': AppointmentStatus.confirmed.name,
       });
 
   // update timeslot for that barber
   await supabase
       .from('time_slots')
-      .update({'status': TimeSlotStatus.BOOKED.name})
+      .update({'status': TimeSlotStatus.booked.name})
       .eq('id', timeslot['id']);
 }
 
@@ -80,12 +80,12 @@ Future<void> cancelBooking(BookingModel booking) async {
   // update appointment status
   await supabase
       .from('appointments')
-      .update({'status': AppointmentStatus.CANCELLED.name})
+      .update({'status': AppointmentStatus.cancelled.name})
       .eq('id', booking.id);
 
   await supabase
       .from('time_slots')
-      .update({'status': TimeSlotStatus.AVAILABLE.name})
+      .update({'status': TimeSlotStatus.available.name})
       .eq('barber_id', booking.barber!.id)
       .eq('date', getDate(booking.date))
       .eq('time', "${getFormattedTime(booking.date)}:00");

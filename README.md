@@ -25,27 +25,14 @@ Supabase is initialized in `lib/main.dart` using `lib/supabase_options.dart`.
 - Email/Password: enable in Supabase Dashboard → Authentication → Providers
 - (Optional) Google OAuth: enable and configure redirect URLs for your target platforms.
 
-### 2.1) Configure redirect URLs (required for email confirmation links)
+### 2.1) Configure redirect URLs (web)
 
-In Supabase Dashboard → Authentication → URL Configuration:
+If you use Google Sign-In on web, add your web origin in Supabase Dashboard → Authentication → URL Configuration → Redirect URLs.
 
-- Add this Redirect URL:
-	- `na-regua://auth-callback`
+Examples:
 
-If you see `AuthException(message: Code verifier could not be found in local storage...)`, it usually means the confirmation link was opened in a different app/browser/storage than the one that initiated the sign-up (PKCE verifier missing). Using the deep link above ensures the callback returns to the app.
-
-### Linux note (desktop)
-
-On Linux, custom schemes like `na-regua://...` only work if the scheme is registered with the OS.
-If you see a “choose application to open this link” prompt, it means no default handler is registered yet.
-
-To register it locally (per-user):
-
-```bash
-flutter build linux --release
-chmod +x tools/register_linux_url_scheme.sh
-./tools/register_linux_url_scheme.sh
-```
+- Local dev: `http://localhost:12345/`
+- Production: `https://your-domain.com/`
 
 ### 3) Where auth is implemented
 

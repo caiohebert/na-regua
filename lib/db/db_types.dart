@@ -1,10 +1,10 @@
 enum AppointmentStatus {
-  PENDING,
-  CONFIRMED,
-  CANCELLED,
+  pending,
+  confirmed,
+  cancelled,
 }
 
 enum TimeSlotStatus {
-  AVAILABLE,
-  BOOKED,
+  available,
+  booked,
 }

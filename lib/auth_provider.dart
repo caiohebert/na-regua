@@ -1,18 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'auth_provider.g.dart';
-
-const supabaseAuthRedirectUri = 'na-regua://auth-callback';
-
-String supabaseRedirectUri() {
-  // Web must use an http(s) origin so the PKCE verifier lives in the same
-  // browser storage that completes the callback.
-  if (kIsWeb) return '${Uri.base.origin}/';
-  return supabaseAuthRedirectUri;
-}
 
 final sessionProvider = StreamProvider.autoDispose<Session?>((ref) async* {
   final auth = Supabase.instance.client.auth;
@@ -33,50 +25,46 @@ class Auth extends _$Auth {
   @override
   FutureOr<void> build() {}
 
-  Future<AuthResponse> signInWithPassword({
-    required String email,
-    required String password,
-  }) {
-    return Supabase.instance.client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-  }
-
-  Future<AuthResponse> signUpWithPassword({
-    required String email,
-    required String password,
-    String? fullName,
-  }) {
-    return Supabase.instance.client.auth.signUp(
-      email: email,
-      password: password,
-      emailRedirectTo: supabaseRedirectUri(),
-      data: fullName == null || fullName.trim().isEmpty
-          ? null
-          : {'full_name': fullName.trim()},
-    );
-  }
-
-  Future<void> resetPassword({
-    required String email,
-    String? redirectTo,
-  }) {
-    return Supabase.instance.client.auth.resetPasswordForEmail(
-      email,
-      redirectTo: redirectTo ?? supabaseRedirectUri(),
-    );
-  }
-
   Future<void> signInWithGoogle() async {
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: supabaseRedirectUri(),
-        queryParams: {
-          'prompt': 'select_account',
-        },
-      );
+      final supabaseAuth = Supabase.instance.client.auth;
+
+      // Web uses OAuth redirect flow.
+      if (kIsWeb) {
+        await supabaseAuth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: '${Uri.base.origin}/',
+          queryParams: const {
+            'prompt': 'select_account',
+          },
+        );
+        return;
+      }
+
+      // Mobile uses native Google Sign-In, then exchanges token with Supabase.
+      if (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS) {
+        final googleSignIn = GoogleSignIn.instance;
+        await googleSignIn.initialize();
+
+        final account = await googleSignIn.authenticate(
+          scopeHint: const ['email', 'profile'],
+        );
+
+        final googleAuth = account.authentication;
+        final idToken = googleAuth.idToken;
+        if (idToken == null || idToken.isEmpty) {
+          throw const AuthException('Missing Google idToken');
+        }
+
+        await supabaseAuth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+        );
+        return;
+      }
+
+      throw UnsupportedError('Google sign-in not supported on this platform');
     } catch (e) {
       debugPrint('Error signing in with Google (Supabase): $e');
     }
