@@ -1,8 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'auth_provider.g.dart';
+
+final sessionProvider = StreamProvider.autoDispose<Session?>((ref) async* {
+  final auth = Supabase.instance.client.auth;
+  yield auth.currentSession;
+  await for (final state in auth.onAuthStateChange) {
+    yield state.session;
+  }
+});
 
 @riverpod
 Stream<AuthState> authState(Ref ref) {
@@ -17,7 +27,39 @@ class Auth extends _$Auth {
 
   Future<void> signInWithGoogle() async {
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.google);
+      final supabaseAuth = Supabase.instance.client.auth;
+
+      // Web uses OAuth redirect flow.
+      if (kIsWeb) {
+        await supabaseAuth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: '${Uri.base.origin}/',
+          queryParams: const {
+            'prompt': 'select_account',
+          },
+        );
+      } else if (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS) {
+        // Mobile uses native Google Sign-In, then exchanges token with Supabase.
+        final googleSignIn = GoogleSignIn.instance;
+        await googleSignIn.initialize();
+
+        final account = await googleSignIn.authenticate(
+          scopeHint: const ['email', 'profile'],
+        );
+
+        final googleAuth = account.authentication;
+        final idToken = googleAuth.idToken;
+        if (idToken == null || idToken.isEmpty) {
+          throw const AuthException('Missing Google idToken');
+        }
+
+        await supabaseAuth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+        );
+      } else {
+        throw UnsupportedError('Google sign-in not supported on this platform');
+      }
     } catch (e) {
       debugPrint('Error signing in with Google (Supabase): $e');
     }

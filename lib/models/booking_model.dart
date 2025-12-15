@@ -29,16 +29,9 @@ class BookingModel {
     // date: YYYY-MM-DD
     // time: HH:MM:SS+TZ
     
-    DateTime dateTime;
-    if (json['date'] != null && json['time'] != null) {
-       final dateStr = json['date'] as String;
-       final timeStr = json['time'] as String;
-       // Simple parsing, might need adjustment based on exact format
-       // Removing TZ for simplicity if needed or parsing properly
-       dateTime = DateTime.parse('${dateStr}T$timeStr'); 
-    } else {
-      dateTime = DateTime.now(); // Fallback
-    }
+    final dateStr = json['date'] as String;
+    final timeStr = json['time'] as String;
+    DateTime dateTime = DateTime.parse('${dateStr}T$timeStr'); 
 
     return BookingModel(
       id: json['id'] as String,
