@@ -13,26 +13,65 @@ Future<List<Map<String, dynamic>>> getBooking(
   AppointmentStatus status
 ) async {
   final supabase = Supabase.instance.client;
+  final userId = supabase.auth.currentUser!.id;
 
   final bookings = await supabase
       .from('appointments')
       .select()
       .eq('barber_id', barber.id)
       .eq('service_id', service.id)
+      .eq('user_id', userId)
       .eq('date', bookedDate)
       // convert HH:MM to HH:MM:SS for matching
       .eq('time', '$bookedTime:00')
-      .eq('status', status.name);
+      .eq('status', status.dbName);
   return bookings;
 }
+
+Future<List<Map<String, dynamic>>> getUserBookings() async {
+  final supabase = Supabase.instance.client;
+  final userId = supabase.auth.currentUser!.id;
+
+  final bookings = await supabase
+      .from('appointments')
+      .select('*, barbers(*), services(*)')
+      .eq('user_id', userId)
+      .order('date', ascending: true);
+  return bookings;
+}
+
+Future<List<Map<String, dynamic>>> getAllServices() async {
+  final supabase = Supabase.instance.client;
+  final services = await supabase.from('services').select();
+  return services;
+}
+
+Future<List<Map<String, dynamic>>> getAllAvailableBarbers(DateTime date) async {
+  final supabase = Supabase.instance.client;
+  
+  /*
+  SELECT DISTINCT(b.*)
+  FROM barbers as b
+  INNER JOIN time_slots as t ON b.id = t.barber_id
+  WHERE t.date = <date> AND t.status = 'AVAILABLE'
+  */
+  final barbers = await supabase
+      .from('barbers')
+      .select('*, time_slots!inner(*)') // !inner enforces INNER JOIN behavior
+      .eq('time_slots.date', getDate(date))
+      .eq('time_slots.status', 'AVAILABLE');
+  return barbers; 
+}
+
 
 Future<void> createBooking(
   ServiceModel service,
   BarberModel barber,
   String bookedDate,
-  String bookedTime
+  String bookedTime,
 ) async {
   final supabase = Supabase.instance.client;
+  final String userId = supabase.auth.currentUser!.id;
 
   final existingBooking = await getBooking(
     service,
@@ -52,7 +91,7 @@ Future<void> createBooking(
       .eq('date', bookedDate)
       // convert HH:MM to HH:MM:SS for matching
       .eq('time', '$bookedTime:00')
-      .eq('status', TimeSlotStatus.available.name)
+      .eq('status', TimeSlotStatus.available.dbName)
       .single();
 
   await supabase
@@ -60,17 +99,17 @@ Future<void> createBooking(
       .insert({
         'barber_id': barber.id,
         'service_id': service.id,
-        'user_id': "851b46fc-76fb-4cc6-b073-add942602b06", // TODO add real user_id when auth is ready
+        'user_id': userId,
         'time_slot_id': timeslot['id'],
         'date': bookedDate,
         'time': "$bookedTime:00",
-        'status': AppointmentStatus.confirmed.name,
+        'status': AppointmentStatus.confirmed.dbName,
       });
 
   // update timeslot for that barber
   await supabase
       .from('time_slots')
-      .update({'status': TimeSlotStatus.booked.name})
+      .update({'status': TimeSlotStatus.booked.dbName})
       .eq('id', timeslot['id']);
 }
 
@@ -80,12 +119,12 @@ Future<void> cancelBooking(BookingModel booking) async {
   // update appointment status
   await supabase
       .from('appointments')
-      .update({'status': AppointmentStatus.cancelled.name})
+      .update({'status': AppointmentStatus.cancelled.dbName})
       .eq('id', booking.id);
 
   await supabase
       .from('time_slots')
-      .update({'status': TimeSlotStatus.available.name})
+      .update({'status': TimeSlotStatus.available.dbName})
       .eq('barber_id', booking.barber!.id)
       .eq('date', getDate(booking.date))
       .eq('time', "${getFormattedTime(booking.date)}:00");

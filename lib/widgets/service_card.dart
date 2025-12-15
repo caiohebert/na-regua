@@ -55,8 +55,8 @@ class ServiceCard extends StatelessWidget {
                     Text(
                       service.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.bold : null,
-                          ),
+                        fontWeight: isSelected ? FontWeight.bold : null,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(

@@ -38,12 +38,8 @@ class Auth extends _$Auth {
             'prompt': 'select_account',
           },
         );
-        return;
-      }
-
-      // Mobile uses native Google Sign-In, then exchanges token with Supabase.
-      if (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS) {
+      } else if (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS) {
+        // Mobile uses native Google Sign-In, then exchanges token with Supabase.
         final googleSignIn = GoogleSignIn.instance;
         await googleSignIn.initialize();
 
@@ -61,10 +57,9 @@ class Auth extends _$Auth {
           provider: OAuthProvider.google,
           idToken: idToken,
         );
-        return;
+      } else {
+        throw UnsupportedError('Google sign-in not supported on this platform');
       }
-
-      throw UnsupportedError('Google sign-in not supported on this platform');
     } catch (e) {
       debugPrint('Error signing in with Google (Supabase): $e');
     }

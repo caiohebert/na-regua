@@ -1,10 +1,22 @@
 enum AppointmentStatus {
   pending,
   confirmed,
-  cancelled,
+  cancelled;
+
+  String get dbName => name.toUpperCase();
 }
 
 enum TimeSlotStatus {
   available,
-  booked,
+  booked;
+
+  String get dbName => name.toUpperCase();
+}
+
+enum UserRole {
+  customer,
+  barber,
+  admin;
+
+  String get dbName => name.toUpperCase();
 }

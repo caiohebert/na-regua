@@ -128,7 +128,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   onPressed: isFormComplete
                       ? () async {
                         // form is complete so parameters should never be null
-                        await createBooking(_selectedService!, _selectedBarber!, getDate(_selectedDate), _selectedTime!);
+                        await createBooking(
+                          _selectedService!,
+                          _selectedBarber!,
+                          getDate(_selectedDate),
+                          _selectedTime!
+                        );
 
                         // Refresh shared bookings data (Home + Bookings screens)
                         ref.invalidate(bookingsProvider);
