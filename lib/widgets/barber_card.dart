@@ -54,7 +54,7 @@ class BarberCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        barber.rating?.toString() ?? 'N/A',
+                        barber.rating == null ? 'N/A' : barber.rating!.toString(),
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(width: 12),
