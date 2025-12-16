@@ -57,7 +57,7 @@ Future<List<Map<String, dynamic>>> getAllAvailableBarbers(DateTime date) async {
   */
   final barbers = await supabase
       .from('barbers')
-      .select('*, time_slots!inner(*)') // !inner enforces INNER JOIN behavior
+      .select('*, time_slots!inner(*), users!inner(*)') // !inner enforces INNER JOIN behavior
       .eq('time_slots.date', getDate(date))
       .eq('time_slots.status', 'AVAILABLE');
   return barbers; 
