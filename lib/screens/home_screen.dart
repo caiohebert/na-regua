@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:na_regua/db/db_types.dart';
 import 'package:na_regua/widgets/homescreen_quick_actions.dart';
 import 'package:na_regua/widgets/no_upcoming_appointments.dart';
 import 'package:na_regua/widgets/welcome_back.dart';
@@ -100,7 +101,7 @@ class HomeScreen extends ConsumerWidget {
               bookingsAsync.when(
                 data: (bookings) {
                   final upcomingBookings = bookings
-                      .where((b) => b.status == 'PENDING' || b.status == 'CONFIRMED' || b.status == 'upcoming')
+                      .where((b) => b.status == AppointmentStatus.pending || b.status == AppointmentStatus.confirmed)
                       .toList()
                     ..sort((a, b) => a.date.compareTo(b.date));
 
@@ -128,7 +129,7 @@ class HomeScreen extends ConsumerWidget {
               bookingsAsync.when(
                 data: (bookings) {
                   final recentBookings = bookings
-                      .where((b) => b.status == 'COMPLETED' || b.status == 'CANCELLED' || (b.status != 'PENDING' && b.status != 'CONFIRMED' && b.status != 'upcoming'))
+                      .where((b) => b.status == AppointmentStatus.cancelled || (b.status != AppointmentStatus.pending && b.status != AppointmentStatus.confirmed))
                       .toList()
                     ..sort((a, b) => b.date.compareTo(a.date));
 
