@@ -1,3 +1,5 @@
+import 'package:na_regua/db/db_types.dart';
+
 import 'barber_model.dart';
 import 'service_model.dart';
 
@@ -7,7 +9,7 @@ class BookingModel {
   final String barberId;
   final String serviceId;
   final DateTime date;
-  final String status;
+  final AppointmentStatus status;
   final String? timeSlotId;
   
   final BarberModel? barber;
@@ -54,7 +56,7 @@ class BookingModel {
       barberId: json['barber_id'] as String,
       serviceId: json['service_id'] as String,
       date: dateTime,
-      status: json['status'] as String,
+      status: AppointmentStatus.fromDbName(json['status'] as String),
       timeSlotId: json['time_slot_id'] as String?,
       barber: json['barbers'] != null ? BarberModel.fromJson(json['barbers']) : null,
       service: json['services'] != null ? ServiceModel.fromJson(json['services']) : null,
