@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:na_regua/auth_provider.dart';
+import 'package:na_regua/screens/login_screen.dart';
+import 'package:na_regua/screens/register_screen.dart';
 
 class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
@@ -46,10 +47,44 @@ class WelcomeScreen extends ConsumerWidget {
               
               const Spacer(),
 
-              ElevatedButton.icon(
-                onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: const Text('Continuar com Google'),
+              // Login Button
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'Entrar',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              
+              // Register Button
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterScreen(),
+                    ),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'Criar Conta',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
               
               const SizedBox(height: 32),
