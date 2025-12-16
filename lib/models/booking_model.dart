@@ -8,9 +8,12 @@ class BookingModel {
   final String serviceId;
   final DateTime date;
   final String status;
+  final String? timeSlotId;
   
   final BarberModel? barber;
   final ServiceModel? service;
+  final String? userName;
+  final String? userEmail;
 
   const BookingModel({
     required this.id,
@@ -19,8 +22,11 @@ class BookingModel {
     required this.serviceId,
     required this.date,
     required this.status,
+    this.timeSlotId,
     this.barber,
     this.service,
+    this.userName,
+    this.userEmail,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -33,6 +39,15 @@ class BookingModel {
     final timeStr = json['time'] as String;
     DateTime dateTime = DateTime.parse('${dateStr}T$timeStr'); 
 
+    // Get user info from the users relation
+    String? userName;
+    String? userEmail;
+    if (json['users'] != null) {
+      final userData = json['users'] as Map<String, dynamic>;
+      userName = userData['name'] as String?;
+      userEmail = userData['email'] as String?;
+    }
+
     return BookingModel(
       id: json['id'] as String,
       userId: json['user_id'] as String,
@@ -40,8 +55,11 @@ class BookingModel {
       serviceId: json['service_id'] as String,
       date: dateTime,
       status: json['status'] as String,
+      timeSlotId: json['time_slot_id'] as String?,
       barber: json['barbers'] != null ? BarberModel.fromJson(json['barbers']) : null,
       service: json['services'] != null ? ServiceModel.fromJson(json['services']) : null,
+      userName: userName,
+      userEmail: userEmail,
     );
   }
 }

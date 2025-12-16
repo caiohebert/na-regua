@@ -31,13 +31,17 @@ class Auth extends _$Auth {
 
       // Web uses OAuth redirect flow.
       if (kIsWeb) {
-        await supabaseAuth.signInWithOAuth(
+        debugPrint('Starting Google OAuth sign-in...');
+        
+        // Use externalApplication mode to force opening in a new tab/window
+        // This avoids popup blockers and iframe issues
+        final result = await supabaseAuth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: '${Uri.base.origin}/',
-          queryParams: const {
-            'prompt': 'select_account',
-          },
+          redirectTo: kIsWeb ? Uri.base.toString() : null,
+          authScreenLaunchMode: LaunchMode.externalApplication,
         );
+        
+        debugPrint('OAuth initiated: $result');
       } else if (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS) {
         // Mobile uses native Google Sign-In, then exchanges token with Supabase.
         final googleSignIn = GoogleSignIn.instance;
@@ -62,6 +66,37 @@ class Auth extends _$Auth {
       }
     } catch (e) {
       debugPrint('Error signing in with Google (Supabase): $e');
+      rethrow;
+    }
+  }
+
+  Future<void> signInWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      debugPrint('Error signing in with email/password: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> signUpWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      debugPrint('Error signing up with email/password: $e');
+      rethrow;
     }
   }
 

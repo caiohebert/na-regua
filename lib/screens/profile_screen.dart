@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart'; // Pacote para pegar a imagem
 import 'package:na_regua/auth_provider.dart';
+import 'package:na_regua/db/user_db.dart';
+import 'package:na_regua/providers/navigation_provider.dart';
+import 'package:na_regua/providers/barber_profile_provider.dart';
+import 'package:na_regua/providers/user_role_provider.dart';
 import 'package:na_regua/screens/welcome_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,6 +20,20 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   File? _selectedImage; // Variável para guardar a imagem selecionada
+  bool _isPromoting = false;
+  String? _barberError;
+  bool _barberFieldsInitialized = false;
+  final _descriptionController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _imageUrlController = TextEditingController();
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _imageUrlController.dispose();
+    super.dispose();
+  }
 
   // Função para abrir o seletor de imagem
   Future<void> _pickImage(ImageSource source) async {
@@ -66,6 +84,107 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  Future<void> _askBecomeBarber() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Quer deixar as pessoas na Régua?'),
+        content: const Text(
+          'Ao aceitar, você terá acesso ao Dashboard de Barbeiro para gerenciar agenda e serviços.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Agora não'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Quero ser barbeiro'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _isPromoting = true;
+      _barberError = null;
+    });
+
+    try {
+      await promoteUserToAdminBarber();
+      if (!mounted) return;
+
+      // Refresh role-dependent UI and send user to dashboard tab
+      ref.invalidate(userRoleProvider);
+      ref.invalidate(isBarberProvider);
+      ref.read(navigationProvider.notifier).setIndex(0);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Perfil atualizado para Barbeiro!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _barberError = 'Não foi possível atualizar. Tente novamente. ($e)';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPromoting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveBarberSettings() async {
+    setState(() {
+      _barberError = null;
+      _isPromoting = true;
+    });
+
+    try {
+      await updateBarberProfile(
+        description: _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
+        location: _locationController.text.trim().isEmpty
+            ? null
+            : _locationController.text.trim(),
+        imageUrl: _imageUrlController.text.trim().isEmpty
+            ? null
+            : _imageUrlController.text.trim(),
+      );
+
+      if (mounted) {
+        ref.invalidate(barberProfileProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Configurações salvas'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _barberError = 'Erro ao salvar. ($e)';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPromoting = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
@@ -73,6 +192,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final displayName = (fullName != null && fullName.isNotEmpty)
         ? fullName
         : (user?.email ?? 'Usuário');
+    final isBarberAsync = ref.watch(isBarberProvider);
+    final barberProfileAsync = ref.watch(barberProfileProvider);
+
+    if (barberProfileAsync.hasValue &&
+        barberProfileAsync.value != null &&
+        !_barberFieldsInitialized) {
+      final data = barberProfileAsync.value!;
+      _descriptionController.text = (data['description'] ?? '') as String;
+      _locationController.text = (data['location'] ?? '') as String;
+      _imageUrlController.text = (data['image_url'] ?? '') as String;
+      _barberFieldsInitialized = true;
+    }
 
     return Scaffold(
       body: SafeArea(
@@ -155,6 +286,136 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   color: Colors.grey[400],
                 ),
               ),
+              const SizedBox(height: 12),
+
+              if (_barberError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    _barberError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              isBarberAsync.maybeWhen(
+                data: (isBarber) {
+                  if (!isBarber) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Quer deixar as pessoas na Régua?',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Vire barbeiro para gerenciar agenda, confirmar clientes e cadastrar serviços.',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _isPromoting ? null : _askBecomeBarber,
+                                icon: _isPromoting
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.cut_outlined),
+                                label: Text(
+                                  _isPromoting
+                                      ? 'Atualizando...'
+                                      : 'Ativar dashboard de barbeiro',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Barber settings
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Configurações NaRégua',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Atualize seu perfil de barbeiro. Todos os campos são opcionais.',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _descriptionController,
+                            maxLines: 3,
+                            decoration: const InputDecoration(
+                              labelText: 'Descrição',
+                              hintText: 'Fale sobre você e seus serviços',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _locationController,
+                            decoration: const InputDecoration(
+                              labelText: 'Localização',
+                              hintText: 'Bairro, cidade...',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _imageUrlController,
+                            decoration: const InputDecoration(
+                              labelText: 'URL da imagem',
+                              hintText: 'https://...',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed:
+                                  _isPromoting ? null : _saveBarberSettings,
+                              icon: _isPromoting
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child:
+                                          CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.save_outlined),
+                              label: Text(
+                                _isPromoting ? 'Salvando...' : 'Salvar',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                orElse: () => const SizedBox.shrink(),
+              ),
+              
               const SizedBox(height: 12),
               
               _ProfileMenuItem(
