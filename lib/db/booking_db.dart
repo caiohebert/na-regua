@@ -34,7 +34,7 @@ Future<List<Map<String, dynamic>>> getUserBookings() async {
 
   final bookings = await supabase
       .from('appointments')
-      .select('*, barbers(*), services(*)')
+      .select('*, barbers(*, users(*)), services(*)')
       .eq('user_id', userId)
       .order('date', ascending: true);
   return bookings;
