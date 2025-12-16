@@ -12,16 +12,16 @@ class AdminDashboardScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Admin Dashboard'),
+          title: const Text('Área do Barbeiro'),
           bottom: const TabBar(
             tabs: [
               Tab(
                 icon: Icon(Icons.calendar_today),
-                text: 'Schedule',
+                text: 'Agenda',
               ),
               Tab(
                 icon: Icon(Icons.content_cut),
-                text: 'My Services',
+                text: 'Serviços',
               ),
             ],
           ),
@@ -36,4 +36,5 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 }
+
 

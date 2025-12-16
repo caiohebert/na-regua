@@ -5,13 +5,18 @@ import 'package:na_regua/widgets/no_upcoming_appointments.dart';
 import 'package:na_regua/widgets/welcome_back.dart';
 import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/widgets/booking_card.dart';
+import 'package:na_regua/providers/user_role_provider.dart';
+import 'package:na_regua/screens/admin_dashboard_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.showBarberAdminAccess = false});
+
+  final bool showBarberAdminAccess;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(bookingsProvider);
+    final isBarberAsync = ref.watch(isBarberProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -38,6 +43,51 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               
               HomescreenQuickActionsWidget(),
+
+              if (showBarberAdminAccess)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: isBarberAsync.maybeWhen(
+                    data: (isBarber) {
+                      if (!isBarber) return const SizedBox.shrink();
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Gerencie sua agenda e serviços.',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: Colors.grey[600]),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const AdminDashboardScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.dashboard_outlined),
+                                  label: const Text('Aréa do Barbeiro'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    orElse: () => const SizedBox.shrink(),
+                  ),
+                ),
               
               const SizedBox(height: 24),
               

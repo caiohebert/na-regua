@@ -26,14 +26,14 @@ class AdminServicesTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No services yet',
+                    'Nenhum serviço',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Colors.grey[600],
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Tap + to add your first service',
+                    'Toque + para adicionar seu primeiro serviço',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[500],
                         ),
@@ -62,7 +62,7 @@ class AdminServicesTab extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 60, color: Colors.red),
               const SizedBox(height: 16),
-              Text('Error loading services: $error'),
+              Text('Erro ao carregar serviços: $error'),
             ],
           ),
         ),
@@ -204,7 +204,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
     final isEdit = widget.service != null;
 
     return AlertDialog(
-      title: Text(isEdit ? 'Edit Service' : 'Add New Service'),
+      title: Text(isEdit ? 'Editar Serviço' : 'Adicionar Novo Serviço'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -214,13 +214,13 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Service Name',
-                  hintText: 'e.g., Haircut',
+                  labelText: 'Nome do Serviço',
+                  hintText: 'Ex: Corte de Cabelo',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a service name';
+                    return 'Por favor, insira um nome para o serviço';
                   }
                   return null;
                 },
@@ -229,18 +229,18 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(
-                  labelText: 'Price (\$)',
-                  hintText: '30.00',
+                  labelText: 'Preço (\R\$)',
+                  hintText: 'Ex: 30.00',
                   border: OutlineInputBorder(),
                   prefixText: '\$ ',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a price';
+                    return 'Por favor, insira um preço para o serviço';
                   }
                   if (double.tryParse(value) == null) {
-                    return 'Please enter a valid number';
+                    return 'Por favor, insira um número válido';
                   }
                   return null;
                 },
@@ -249,17 +249,17 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
               TextFormField(
                 controller: _durationController,
                 decoration: const InputDecoration(
-                  labelText: 'Duration (minutes)',
+                  labelText: 'Duração (minutos)',
                   hintText: '30',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter duration';
+                    return 'Por favor, insira a duração do serviço';
                   }
                   if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
+                    return 'Por favor, insira um número válido';
                   }
                   return null;
                 },
@@ -268,8 +268,8 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
-                  hintText: 'Describe the service...',
+                  labelText: 'Descrição (opcional)',
+                  hintText: 'Descreva o serviço...',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
@@ -283,13 +283,13 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
           TextButton(
             onPressed: _isLoading ? null : _deleteService,
             child: const Text(
-              'Delete',
+              'Deletar',
               style: TextStyle(color: Colors.red),
             ),
           ),
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: const Text('Cancelar'),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveService,
@@ -299,7 +299,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(isEdit ? 'Update' : 'Create'),
+              : Text(isEdit ? 'Atualizar' : 'Criar'),
         ),
       ],
     );
@@ -344,8 +344,8 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
           SnackBar(
             content: Text(
               widget.service != null
-                  ? 'Service updated successfully'
-                  : 'Service created successfully',
+                  ? 'Serviço atualizado com sucesso'
+                  : 'Serviço criado com sucesso',
             ),
             backgroundColor: Colors.green,
           ),
@@ -355,7 +355,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving service: $e'),
+            content: Text('Erro ao salvar serviço: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -372,18 +372,18 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Service'),
+        title: const Text('Deletar Serviço'),
         content: const Text(
-          'Are you sure you want to delete this service? This action cannot be undone.',
+          'Tem certeza que deseja deletar este serviço? Esta ação não pode ser desfeita.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Deletar', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -401,7 +401,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Service deleted successfully'),
+            content: Text('Serviço deletado com sucesso'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -410,7 +410,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error deleting service: $e'),
+            content: Text('Erro ao deletar serviço: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -422,4 +422,5 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
     }
   }
 }
+
 

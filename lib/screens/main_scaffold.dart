@@ -4,7 +4,6 @@ import 'package:na_regua/screens/home_screen.dart';
 import 'package:na_regua/screens/schedule_screen.dart';
 import 'package:na_regua/screens/profile_screen.dart';
 import 'package:na_regua/screens/bookings_screen.dart';
-import 'package:na_regua/screens/admin_dashboard_screen.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/user_role_provider.dart';
 
@@ -19,13 +18,14 @@ class MainScaffold extends ConsumerWidget {
 
     return isBarberAsync.when(
       data: (isBarber) {
-        if (isBarber) {
-          // Barber/Admin Dashboard
-          return _buildBarberScaffold(context, ref, currentIndex);
-        } else {
-          // Client View
-          return _buildClientScaffold(context, ref, currentIndex);
-        }
+        // Barbers now share the same main nav as clients; the Home tab will
+        // surface a card to access the Admin Dashboard.
+        return _buildClientScaffold(
+          context,
+          ref,
+          currentIndex,
+          showBarberAdminAccess: isBarber,
+        );
       },
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -45,12 +45,17 @@ class MainScaffold extends ConsumerWidget {
     );
   }
 
-  Widget _buildClientScaffold(BuildContext context, WidgetRef ref, int currentIndex) {
-    final List<Widget> screens = const [
-      HomeScreen(),
-      ScheduleScreen(),
-      BookingsScreen(),
-      ProfileScreen(),
+  Widget _buildClientScaffold(
+    BuildContext context,
+    WidgetRef ref,
+    int currentIndex, {
+    bool showBarberAdminAccess = false,
+  }) {
+    final List<Widget> screens = [
+      HomeScreen(showBarberAdminAccess: showBarberAdminAccess),
+      const ScheduleScreen(),
+      const BookingsScreen(),
+      const ProfileScreen(),
     ];
 
     return Scaffold(
@@ -75,35 +80,6 @@ class MainScaffold extends ConsumerWidget {
             icon: Icon(Icons.receipt_long_outlined),
             activeIcon: Icon(Icons.receipt_long),
             label: 'Agendamentos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Perfil',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBarberScaffold(BuildContext context, WidgetRef ref, int currentIndex) {
-    final List<Widget> screens = const [
-      AdminDashboardScreen(),
-      ProfileScreen(),
-    ];
-
-    return Scaffold(
-      body: screens[currentIndex > 1 ? 0 : currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex > 1 ? 0 : currentIndex,
-        onTap: (index) {
-          ref.read(navigationProvider.notifier).setIndex(index);
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

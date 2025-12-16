@@ -32,7 +32,7 @@ class AdminScheduleTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No upcoming appointments',
+                  'Nenhum agendamento',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -61,7 +61,7 @@ class AdminScheduleTab extends ConsumerWidget {
           children: [
             const Icon(Icons.error_outline, size: 60, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Error loading appointments: $error'),
+            Text('Erro ao carregar agendamentos: $error'),
           ],
         ),
       ),
@@ -232,7 +232,7 @@ class AppointmentCard extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Appointment confirmed successfully'),
+            content: Text('Agendamento confirmado com sucesso'),
             backgroundColor: Colors.green,
           ),
         );
@@ -242,7 +242,7 @@ class AppointmentCard extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error confirming appointment: $e'),
+            content: Text('Erro ao confirmar agendamento: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -259,16 +259,16 @@ class AppointmentCard extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Appointment'),
-        content: const Text('Are you sure you want to cancel this appointment?'),
+        title: const Text('Cancelar Agendamento'),
+        content: const Text('Tem certeza que deseja cancelar este agendamento?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: const Text('Não'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes', style: TextStyle(color: Colors.red)),
+            child: const Text('Sim', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -280,7 +280,7 @@ class AppointmentCard extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Appointment cancelled successfully'),
+              content: Text('Agendamento cancelado com sucesso'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -290,7 +290,7 @@ class AppointmentCard extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error cancelling appointment: $e'),
+              content: Text('Erro ao cancelar agendamento: $e'),
               backgroundColor: Colors.red,
             ),
           );
