@@ -201,9 +201,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         location: _locationController.text.trim().isEmpty
             ? null
             : _locationController.text.trim(),
-        avatarUrl: _imageUrlController.text.trim().isEmpty
-            ? null
-            : _imageUrlController.text.trim(),
       );
 
       // Persist services selection: compute diffs against current DB state

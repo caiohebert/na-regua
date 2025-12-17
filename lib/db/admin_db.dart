@@ -22,7 +22,9 @@ Future<List<Map<String, dynamic>>> getBarberAppointments() async {
   // Get all appointments for this barber
   final appointments = await supabase
       .from('appointments')
-      .select('*, users!appointments_user_id_fkey(name, email), services(*)')
+      .select(
+        '*, users!appointments_user_id_fkey(name, email, avatar_url), services(*)',
+      )
       .eq('barber_id', barberId)
       .order('date', ascending: true)
       .order('time', ascending: true);
@@ -33,7 +35,7 @@ Future<List<Map<String, dynamic>>> getBarberAppointments() async {
 /// Confirm an appointment
 Future<void> confirmAppointment(String appointmentId) async {
   final supabase = Supabase.instance.client;
-  
+
   await supabase
       .from('appointments')
       .update({'status': AppointmentStatus.confirmed.dbName})
@@ -41,7 +43,10 @@ Future<void> confirmAppointment(String appointmentId) async {
 }
 
 /// Cancel an appointment as barber
-Future<void> cancelAppointmentAsBarber(String appointmentId, String timeSlotId) async {
+Future<void> cancelAppointmentAsBarber(
+  String appointmentId,
+  String timeSlotId,
+) async {
   final supabase = Supabase.instance.client;
 
   // Update appointment status
@@ -84,22 +89,22 @@ Future<void> updateService({
 }) async {
   final supabase = Supabase.instance.client;
 
-  await supabase.from('services').update({
-    'name': name,
-    'price': price,
-    'duration': durationMinutes,
-    'description': description,
-  }).eq('id', serviceId);
+  await supabase
+      .from('services')
+      .update({
+        'name': name,
+        'price': price,
+        'duration': durationMinutes,
+        'description': description,
+      })
+      .eq('id', serviceId);
 }
 
 /// Delete a service
 Future<void> deleteService(String serviceId) async {
   final supabase = Supabase.instance.client;
 
-  await supabase
-      .from('services')
-      .delete()
-      .eq('id', serviceId);
+  await supabase.from('services').delete().eq('id', serviceId);
 }
 
 /// Helper to get current barber id for authenticated user
@@ -128,7 +133,9 @@ Future<List<String>> getCurrentBarberServiceIds() async {
       .select('service_id')
       .eq('barber_id', barberId);
 
-  final list = (rows as List<dynamic>).map((e) => (e as Map<String, dynamic>)['service_id'] as String).toList();
+  final list = (rows as List<dynamic>)
+      .map((e) => (e as Map<String, dynamic>)['service_id'] as String)
+      .toList();
   return list;
 }
 
@@ -136,7 +143,8 @@ Future<List<String>> getCurrentBarberServiceIds() async {
 Future<void> addServiceToCurrentBarber(String serviceId) async {
   final supabase = Supabase.instance.client;
   final barberId = await _getCurrentBarberId();
-  if (barberId == null) throw Exception('Barber record not found for current user');
+  if (barberId == null)
+    throw Exception('Barber record not found for current user');
 
   await supabase.from('barber_services').insert({
     'barber_id': barberId,
@@ -148,7 +156,8 @@ Future<void> addServiceToCurrentBarber(String serviceId) async {
 Future<void> removeServiceFromCurrentBarber(String serviceId) async {
   final supabase = Supabase.instance.client;
   final barberId = await _getCurrentBarberId();
-  if (barberId == null) throw Exception('Barber record not found for current user');
+  if (barberId == null)
+    throw Exception('Barber record not found for current user');
 
   await supabase
       .from('barber_services')
@@ -156,4 +165,3 @@ Future<void> removeServiceFromCurrentBarber(String serviceId) async {
       .eq('barber_id', barberId)
       .eq('service_id', serviceId);
 }
-

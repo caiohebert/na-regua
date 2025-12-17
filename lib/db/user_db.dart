@@ -104,7 +104,6 @@ Future<Map<String, dynamic>?> getBarberProfile() async {
 Future<void> updateBarberProfile({
   String? description,
   String? location,
-  String? avatarUrl,
   String? coverUrl,
 }) async {
   final supabase = Supabase.instance.client;
@@ -121,7 +120,6 @@ Future<void> updateBarberProfile({
       .update({
         'description': description,
         'location': location,
-        'avatar_url': avatarUrl,
         'cover_url': coverUrl,
       })
       .eq('user_id', currentUser.id);
@@ -135,7 +133,7 @@ Future<List<Map<String, dynamic>>> getAllUsers() async {
   final supabase = Supabase.instance.client;
   final users = await supabase
       .from('users')
-      .select('id, name, email, type')
+      .select('id, name, email, type, avatar_url')
       .order('updated_at', ascending: false);
   return (users as List<dynamic>)
       .map((e) => e as Map<String, dynamic>)
@@ -172,7 +170,7 @@ Future<List<Map<String, dynamic>>> getUsersByRole(UserRole role) async {
   final supabase = Supabase.instance.client;
   final users = await supabase
       .from('users')
-      .select('id, name, email, type')
+      .select('id, name, email, type, avatar_url')
       .eq('type', role.dbName)
       .order('updated_at', ascending: false);
   return (users as List<dynamic>)
@@ -189,7 +187,7 @@ Future<List<Map<String, dynamic>>> searchUsers(String query) async {
   // Use PostgREST OR filter via `or` operator
   final users = await supabase
       .from('users')
-      .select('id, name, email, type')
+      .select('id, name, email, type, avatar_url')
       .or('name.ilike.%$q%,email.ilike.%$q%')
       .order('updated_at', ascending: false);
 
