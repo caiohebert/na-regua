@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:na_regua/db/db_types.dart';
-import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/providers/barbers_provider.dart';
+import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/providers/timetable_provider.dart';
-import '../models/booking_model.dart';
+
 import '../db/booking_db.dart';
+import '../models/booking_model.dart';
 
 class StatusText extends StatelessWidget {
   final AppointmentStatus status;
@@ -15,7 +16,8 @@ class StatusText extends StatelessWidget {
   const StatusText({super.key, required this.status, required this.booking});
 
   Color get color {
-    if (status == AppointmentStatus.pending || status == AppointmentStatus.confirmed) {
+    if (status == AppointmentStatus.pending ||
+        status == AppointmentStatus.confirmed) {
       return const Color(0xFFEDB33C);
     }
     if (status == AppointmentStatus.cancelled) {
@@ -68,7 +70,10 @@ class CancelButton extends ConsumerWidget {
             // Botão NÃO (Voltar)
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text("Voltar", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "Voltar",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             // Botão SIM (Confirmar cancelamento)
             TextButton(
@@ -83,7 +88,14 @@ class CancelButton extends ConsumerWidget {
                 ref.invalidate(bookingsProvider);
 
                 // 4. Atualiza disponibilidade (cancelamento libera o horário)
-                ref.invalidate(barbersProvider(BarbersParams(date: booking.date, serviceId: booking.service?.id)));
+                ref.invalidate(
+                  barbersProvider(
+                    BarbersParams(
+                      date: booking.date,
+                      serviceId: booking.service?.id,
+                    ),
+                  ),
+                );
                 ref.invalidate(
                   timetableProvider(
                     TimetableParams(barber: booking.barber, date: booking.date),
@@ -114,7 +126,10 @@ class CancelButton extends ConsumerWidget {
               },
               child: const Text(
                 "Confirmar Cancelamento",
-                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -131,9 +146,7 @@ class CancelButton extends ConsumerWidget {
       onPressed: () => _showCancelConfirmation(context, ref),
       style: IconButton.styleFrom(
         side: const BorderSide(color: Colors.red),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       ),
     );
   }
@@ -171,8 +184,23 @@ class BookingCard extends StatelessWidget {
 
   const BookingCard({super.key, required this.booking});
 
+  // Widget auxiliar para o "Avatar Padrão" (Ícone)
+  // Criamos aqui para reutilizar tanto no 'else' quanto no 'errorBuilder'
+  Widget _buildPlaceholder() {
+    return Container(
+      width: 48,
+      height: 48,
+      color: Colors.grey[800],
+      child: const Icon(Icons.person, color: Colors.white),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasImage =
+        booking.barber?.avatarUrl != null &&
+        booking.barber!.avatarUrl!.isNotEmpty;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
       padding: const EdgeInsets.all(16.0),
@@ -187,19 +215,19 @@ class BookingCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
-                child: Image.network(
-                  booking.barber?.imageUrl ?? 'https://via.placeholder.com/150',
-                  width: 48,
-                  height: 48,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 48,
-                    height: 48,
-                    color: Colors.grey,
-                    child: const Icon(Icons.person, color: Colors.white),
-                  ),
-                ),
+                child: hasImage
+                    ? Image.network(
+                        booking.barber!.avatarUrl!,
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildPlaceholder(),
+                      )
+                    : _buildPlaceholder(), // Se não tiver URL, mostra o ícone direto
               ),
+              // --------------------
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -215,17 +243,15 @@ class BookingCard extends StatelessWidget {
                     ),
                     Text(
                       booking.service?.name ?? 'Unknown Service',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   ],
                 ),
               ),
               StatusText(status: booking.status, booking: booking),
               const SizedBox(width: 8),
-              if (booking.status == AppointmentStatus.pending || booking.status == AppointmentStatus.confirmed) ...[
+              if (booking.status == AppointmentStatus.pending ||
+                  booking.status == AppointmentStatus.confirmed) ...[
                 const SizedBox(width: 8),
                 CancelButton(booking: booking),
               ],

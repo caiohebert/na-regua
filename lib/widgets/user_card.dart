@@ -4,9 +4,17 @@ class UserCard extends StatelessWidget {
   final String? name;
   final String? email;
   final String? role;
+  final String? avatarUrl;
   final Widget? trailing;
 
-  const UserCard({super.key, this.name, this.email, this.role, this.trailing});
+  const UserCard({
+    super.key,
+    this.name,
+    this.email,
+    this.role,
+    this.avatarUrl,
+    this.trailing,
+  });
 
   String _initials(String? name) {
     if (name == null || name.isEmpty) return '?';
@@ -17,11 +25,14 @@ class UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasImage = avatarUrl != null && avatarUrl!.isNotEmpty;
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       child: ListTile(
         leading: CircleAvatar(
-          child: Text(_initials(name)),
+          backgroundImage: hasImage ? NetworkImage(avatarUrl!) : null,
+          child: !hasImage ? Text(_initials(name)) : null,
         ),
         title: Text(name ?? 'Usuário sem nome'),
         subtitle: Text(email ?? ''),
