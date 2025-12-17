@@ -7,7 +7,7 @@ import 'package:na_regua/screens/profile_screen.dart';
 import 'package:na_regua/screens/bookings_screen.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/user_role_provider.dart';
-import 'package:na_regua/screens/admin_user_management_screen.dart';
+import 'package:na_regua/screens/admin_dashboard_screen.dart';
 import 'package:na_regua/db/db_types.dart';
 
 class MainScaffold extends ConsumerWidget {
@@ -66,8 +66,8 @@ class MainScaffold extends ConsumerWidget {
         ];
 
         if (role == UserRole.admin) {
-          // append admin management screen and nav item
-          screens.add(const AdminUserManagementScreen());
+          // append admin dashboard (users + services) and nav item
+          screens.add(const AdminDashboardScreen());
           items.add(const BottomNavigationBarItem(
             icon: Icon(Icons.admin_panel_settings_outlined),
             activeIcon: Icon(Icons.admin_panel_settings),
