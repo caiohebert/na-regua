@@ -133,6 +133,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 TimetableWidget(
                   barber: _selectedBarber,
                   date: _selectedDate,
+                  serviceDurationMinutes: _selectedService?.durationMinutes,
                   onTimeSelected: (time) => setState(() => _selectedTime = time),
                 ),
               
