@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:na_regua/db/db_types.dart';
-import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/providers/barbers_provider.dart';
+import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/providers/timetable_provider.dart';
-import '../models/booking_model.dart';
+
 import '../db/booking_db.dart';
+import '../models/booking_model.dart';
 
 class StatusText extends StatelessWidget {
   final AppointmentStatus status;
@@ -73,7 +74,10 @@ class CancelButton extends ConsumerWidget {
             // Botão NÃO (Voltar)
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text("Voltar", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "Voltar",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             // Botão SIM (Confirmar cancelamento)
             TextButton(
@@ -119,7 +123,10 @@ class CancelButton extends ConsumerWidget {
               },
               child: const Text(
                 "Confirmar Cancelamento",
-                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -136,9 +143,7 @@ class CancelButton extends ConsumerWidget {
       onPressed: () => _showCancelConfirmation(context, ref),
       style: IconButton.styleFrom(
         side: const BorderSide(color: Colors.red),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       ),
     );
   }
@@ -193,7 +198,8 @@ class BookingCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Image.network(
-                  booking.barber?.imageUrl ?? 'https://via.placeholder.com/150',
+                  booking.barber?.avatarUrl ??
+                      'https://via.placeholder.com/150',
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,
@@ -220,17 +226,15 @@ class BookingCard extends StatelessWidget {
                     ),
                     Text(
                       booking.service?.name ?? 'Unknown Service',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   ],
                 ),
               ),
               StatusText(status: booking.status, booking: booking),
               const SizedBox(width: 8),
-              if (booking.status == AppointmentStatus.pending || booking.status == AppointmentStatus.confirmed) ...[
+              if (booking.status == AppointmentStatus.pending ||
+                  booking.status == AppointmentStatus.confirmed) ...[
                 const SizedBox(width: 8),
                 CancelButton(booking: booking),
               ],

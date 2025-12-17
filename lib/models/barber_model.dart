@@ -6,7 +6,6 @@ class BarberModel {
   final String? description;
   final double? rating;
   final String? avatarUrl;
-  final String? imageUrl;
   final String? location;
   final List<ServiceModel> services;
 
@@ -18,7 +17,6 @@ class BarberModel {
     this.description,
     this.rating,
     this.avatarUrl,
-    this.imageUrl,
     this.location,
     this.services = const [],
   });
@@ -31,9 +29,9 @@ class BarberModel {
       description: json['description'] as String?,
       rating: (json['rating'] as num?)?.toDouble(),
       avatarUrl: json['avatar_url'] as String?,
-      imageUrl: json['image_url'] as String?,
       location: json['location'] as String?,
-      services: (json['services'] as List<dynamic>?)
+      services:
+          (json['services'] as List<dynamic>?)
               ?.map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
