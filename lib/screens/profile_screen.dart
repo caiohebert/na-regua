@@ -251,7 +251,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         location: _locationController.text.trim().isEmpty
             ? null
             : _locationController.text.trim(),
-        imageUrl: _imageUrlController.text.trim().isEmpty
+        avatarUrl: _imageUrlController.text.trim().isEmpty
             ? null
             : _imageUrlController.text.trim(),
       );
