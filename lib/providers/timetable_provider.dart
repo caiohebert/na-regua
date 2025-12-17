@@ -64,9 +64,41 @@ final timetableProvider = FutureProvider.family<List<String>, TimetableParams>((
 
   final times = <String>[];
   final slots = data.map((e) => e as Map<String, dynamic>).toList();
+  
+  // Get current date/time for filtering past slots on today's date
+  final now = DateTime.now();
+  final isToday = now.year == params.date.year &&
+      now.month == params.date.month &&
+      now.day == params.date.day;
+  
   for (var i = 0; i < slots.length; i++) {
     final s = slots[i];
     if (s['status'] != 'AVAILABLE') continue;
+
+    // If the selected date is today, filter out past time slots
+    if (isToday) {
+      final slotDateTime = buildDateTime(bookingDate, s['time'] as String);
+      // Normalize to compare only date and time (ignore seconds/milliseconds)
+      final slotNormalized = DateTime(
+        slotDateTime.year,
+        slotDateTime.month,
+        slotDateTime.day,
+        slotDateTime.hour,
+        slotDateTime.minute,
+      );
+      final nowNormalized = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        now.hour,
+        now.minute,
+      );
+      
+      // Skip if the slot time has already passed today
+      if (slotNormalized.isBefore(nowNormalized)) {
+        continue;
+      }
+    }
 
     // check following consecutive slots
     var ok = true;
