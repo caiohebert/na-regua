@@ -7,7 +7,7 @@ import 'package:na_regua/widgets/welcome_back.dart';
 import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/widgets/booking_card.dart';
 import 'package:na_regua/providers/user_role_provider.dart';
-import 'package:na_regua/screens/admin_dashboard_screen.dart';
+import 'package:na_regua/screens/barber_dashboard_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key, this.showBarberAdminAccess = false});
@@ -73,7 +73,7 @@ class HomeScreen extends ConsumerWidget {
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) =>
-                                            const AdminDashboardScreen(),
+                                            const BarberDashboardScreen(),
                                       ),
                                     );
                                   },
