@@ -6,12 +6,14 @@ import '../providers/timetable_provider.dart';
 class TimetableWidget extends ConsumerStatefulWidget {
   final BarberModel? barber;
   final DateTime date;
+  final int? serviceDurationMinutes;
   final ValueChanged<String> onTimeSelected;
 
   const TimetableWidget({
     super.key,
     required this.barber,
     required this.date,
+    this.serviceDurationMinutes,
     required this.onTimeSelected,
   });
 
@@ -36,7 +38,11 @@ class _TimetableWidgetState extends ConsumerState<TimetableWidget> {
   Widget build(BuildContext context) {
     final timetableAsync = ref.watch(
       timetableProvider(
-        TimetableParams(barber: widget.barber, date: widget.date),
+        TimetableParams(
+          barber: widget.barber,
+          date: widget.date,
+          serviceDurationMinutes: widget.serviceDurationMinutes,
+        ),
       ),
     );
 

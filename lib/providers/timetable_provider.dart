@@ -6,10 +6,12 @@ import '../utils/date.dart';
 class TimetableParams {
   final BarberModel? barber;
   final DateTime date;
+  final int? serviceDurationMinutes;
 
   const TimetableParams({
     required this.barber,
     required this.date,
+    this.serviceDurationMinutes,
   });
 
   @override
@@ -22,7 +24,7 @@ class TimetableParams {
   }
 
   @override
-  int get hashCode => barber.hashCode ^ date.hashCode;
+  int get hashCode => barber.hashCode ^ date.hashCode ^ (serviceDurationMinutes ?? 0);
 }
 
 final timetableProvider = FutureProvider.family<List<String>, TimetableParams>((ref, params) async {
@@ -33,15 +35,57 @@ final timetableProvider = FutureProvider.family<List<String>, TimetableParams>((
   final supabase = Supabase.instance.client;
 
   final bookingDate = getDate(params.date);
+  // Fetch all slots for the barber/date (we need statuses to check consecutive availability)
   final response = await supabase
       .from('time_slots')
       .select()
       .eq('barber_id', params.barber!.id)
       .eq('date', bookingDate)
-      .eq('status', 'AVAILABLE');
+      .order('time', ascending: true);
   final data = response as List<dynamic>;
 
-  return data
-      .map((e) => getFormattedTime(buildDateTime(bookingDate, (e as Map<String, dynamic>)['time'] as String)))
-      .toList();
+  if (data.isEmpty) return [];
+
+  // determine slot minutes by comparing first two entries (fallback 30)
+  int slotMinutes = 30;
+  if (data.length >= 2) {
+    try {
+      final first = (data[0] as Map<String, dynamic>);
+      final second = (data[1] as Map<String, dynamic>);
+      final dt1 = buildDateTime(bookingDate, first['time'] as String);
+      final dt2 = buildDateTime(bookingDate, second['time'] as String);
+      final diff = dt2.difference(dt1).inMinutes;
+      if (diff > 0) slotMinutes = diff;
+    } catch (_) {}
+  }
+
+  final serviceDuration = params.serviceDurationMinutes ?? 0;
+  final slotsNeeded = serviceDuration > 0 ? (serviceDuration + slotMinutes - 1) ~/ slotMinutes : 1;
+
+  final times = <String>[];
+  final slots = data.map((e) => e as Map<String, dynamic>).toList();
+  for (var i = 0; i < slots.length; i++) {
+    final s = slots[i];
+    if (s['status'] != 'AVAILABLE') continue;
+
+    // check following consecutive slots
+    var ok = true;
+    for (var j = 1; j < slotsNeeded; j++) {
+      final idx = i + j;
+      if (idx >= slots.length) {
+        ok = false;
+        break;
+      }
+      final next = slots[idx];
+      if (next['status'] != 'AVAILABLE') {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) {
+      times.add(getFormattedTime(buildDateTime(bookingDate, s['time'] as String)));
+    }
+  }
+
+  return times;
 });
