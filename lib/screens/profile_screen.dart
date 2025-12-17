@@ -106,8 +106,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             : _imageUrlController.text.trim(),
       );
 
-
-
       if (mounted) {
         ref.invalidate(barberProfileProvider);
         ScaffoldMessenger.of(context).showSnackBar(
