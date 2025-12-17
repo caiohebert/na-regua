@@ -80,9 +80,7 @@ Future<void> ensureBarberProfile() async {
   }
 
   await supabase.from('barbers').upsert(
-    {
-      'user_id': currentUser.id,
-    },
+    {'user_id': currentUser.id},
     onConflict: 'user_id', // prevent duplicate barber rows per user
   );
 }
@@ -106,7 +104,7 @@ Future<Map<String, dynamic>?> getBarberProfile() async {
 Future<void> updateBarberProfile({
   String? description,
   String? location,
-  String? imageUrl,
+  String? avatarUrl,
   String? coverUrl,
 }) async {
   final supabase = Supabase.instance.client;
@@ -118,12 +116,15 @@ Future<void> updateBarberProfile({
   // Ensure row exists so update works
   await ensureBarberProfile();
 
-  await supabase.from('barbers').update({
-    'description': description,
-    'location': location,
-    'image_url': imageUrl,
-    'cover_url': coverUrl,
-  }).eq('user_id', currentUser.id);
+  await supabase
+      .from('barbers')
+      .update({
+        'description': description,
+        'location': location,
+        'avatar_url': avatarUrl,
+        'cover_url': coverUrl,
+      })
+      .eq('user_id', currentUser.id);
 }
 
 /// Promote current user to admin (barber dashboard) and ensure barber profile
