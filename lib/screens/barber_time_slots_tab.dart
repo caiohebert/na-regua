@@ -17,8 +17,8 @@ class BarberTimeSlotsTab extends ConsumerStatefulWidget {
 class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
   final int _startHour = 7;
   final int _endHour = 20; // last slot start
-  final double _cellHeight = 48;
-  final double _timeColWidth = 72;
+  final double _cellHeight = 36;
+  final double _timeColWidth = 56;
 
   // selected keys for template: 'W|HH:MM:SS' where W = weekday (1=Mon..7=Sun)
   final Set<String> _selected = {};
@@ -35,6 +35,9 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
   // template weekdays Monday..Friday
   List<int> get _templateWeekdays => [1, 2, 3, 4, 5];
 
+  // weekdays currently visible in the grid (only those enabled)
+  List<int> get _visibleWeekdays => _templateWeekdays.where((w) => _weekdaysEnabled.contains(w)).toList();
+
   List<TimeOfDay> get _times {
     final times = <TimeOfDay>[];
     for (var h = _startHour; h <= _endHour; h++) {
@@ -45,12 +48,7 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
     return times.where((t) => t.hour < _endHour || (t.hour == _endHour && t.minute == 0)).toList();
   }
 
-  String _cellKeyFor(int row, int col) {
-    final weekday = _templateWeekdays[col];
-    final time = _times[row];
-    final timeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
-    return '$weekday|$timeStr';
-  }
+  
 
   /// Fetch existing slots for the next [daysAhead] days (default 90)
   /// and mark which template weekday/time keys already have at least one occurrence.
@@ -151,7 +149,7 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
     if (dx < 0) return;
     final col = (dx / cellW).floor();
     final row = (dy / _cellHeight).floor();
-    if (col < 0 || col >= _templateWeekdays.length || row < 0 || row >= _times.length) return;
+    if (col < 0 || col >= _visibleWeekdays.length || row < 0 || row >= _times.length) return;
     _isDragging = true;
     _dragStartRow = row;
     _dragStartCol = col;
@@ -165,7 +163,7 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
     if (dx < 0) return;
     final col = (dx / cellW).floor();
     final row = (dy / _cellHeight).floor();
-    if (col < 0 || col >= _templateWeekdays.length || row < 0 || row >= _times.length) return;
+    if (col < 0 || col >= _visibleWeekdays.length || row < 0 || row >= _times.length) return;
     _updateSelection(row, col);
   }
 
@@ -185,7 +183,10 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
     final newSel = <String>{};
     for (var r = r0; r <= r1; r++) {
       for (var c = c0; c <= c1; c++) {
-        final key = _cellKeyFor(r, c);
+        // map column index to visible weekday
+        if (c < 0 || c >= _visibleWeekdays.length) continue;
+        final wk = _visibleWeekdays[c];
+        final key = _cellKeyForRowAndWeekday(r, wk);
         if (!_existing.contains(key)) newSel.add(key);
       }
     }
@@ -194,6 +195,12 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
         ..clear()
         ..addAll(newSel);
     });
+  }
+
+  String _cellKeyForRowAndWeekday(int row, int weekday) {
+    final time = _times[row];
+    final timeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+    return '$weekday|$timeStr';
   }
 
   @override
@@ -267,15 +274,19 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
             Expanded(
               child: LayoutBuilder(builder: (context, constraints) {
                 final gridLeft = _timeColWidth;
-                final cellW = (constraints.maxWidth - _timeColWidth) / _templateWeekdays.length;
+                final visibleCount = _visibleWeekdays.isEmpty ? _templateWeekdays.length : _visibleWeekdays.length;
+                final cellW = (constraints.maxWidth - _timeColWidth) / visibleCount;
                 return Column(
                   children: [
-                    // Header row with weekdays
+                    // Header row with weekdays (fixed column widths matching grid)
                     SizedBox(
-                      height: 40,
+                      height: 36,
                       child: Row(children: [
                         SizedBox(width: _timeColWidth, child: const Center(child: Text('Horário'))),
-                        ..._templateWeekdays.map((d) => Expanded(child: Center(child: Text(_weekdayName(d))))),
+                        SizedBox(
+                          width: cellW * (_visibleWeekdays.isEmpty ? _templateWeekdays.length : _visibleWeekdays.length),
+                          child: Row(children: _visibleWeekdays.map((d) => SizedBox(width: cellW, child: Center(child: Text(_weekdayName(d))))).toList()),
+                        ),
                       ]),
                     ),
                     const Divider(height: 1),
@@ -301,14 +312,14 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
                               ),
                               // days grid
                               SizedBox(
-                                width: cellW * _templateWeekdays.length,
+                                width: cellW * _visibleWeekdays.length,
                                 child: Column(
                                   children: _times.map((time) {
                                     final row = _times.indexOf(time);
                                     return Row(
-                                      children: List.generate(_templateWeekdays.length, (colIdx) {
-                                        final key = _cellKeyFor(row, colIdx);
-                                        final weekday = _templateWeekdays[colIdx];
+                                      children: List.generate(_visibleWeekdays.length, (colIdx) {
+                                        final weekday = _visibleWeekdays[colIdx];
+                                        final key = _cellKeyForRowAndWeekday(row, weekday);
                                         final occupied = _existing.contains(key);
                                         final selected = _selected.contains(key);
                                         final enabled = _weekdaysEnabled.contains(weekday);
@@ -331,15 +342,13 @@ class _BarberTimeSlotsTabState extends ConsumerState<BarberTimeSlotsTab> {
                                             width: cellW,
                                             height: _cellHeight,
                                             child: Container(
-                                              margin: const EdgeInsets.all(6),
+                                              margin: const EdgeInsets.all(4),
                                               decoration: BoxDecoration(
-                                                color: occupied
-                                                    ? Colors.grey[400]
-                                                    : (selected ? Colors.blue.shade400 : Colors.white),
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: enabled ? Colors.grey.shade300 : Colors.grey.shade200, width: 0.8),
+                                                color: selected ? Colors.orange.shade400 : Colors.transparent,
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(color: Colors.orange, width: 1.2),
                                                 boxShadow: selected
-                                                  ? [BoxShadow(color: Colors.blue.withValues(alpha: 0.18), blurRadius: 6, offset: const Offset(0, 2))]
+                                                  ? [BoxShadow(color: Colors.orange.withValues(alpha: 0.18), blurRadius: 6, offset: const Offset(0, 2))]
                                                   : null,
                                               ),
                                             ),
