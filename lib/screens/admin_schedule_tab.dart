@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:na_regua/db/admin_db.dart';
+import 'package:na_regua/db/db_types.dart';
 import 'package:na_regua/providers/admin_provider.dart';
 
 class AdminScheduleTab extends ConsumerWidget {
@@ -15,9 +16,8 @@ class AdminScheduleTab extends ConsumerWidget {
       data: (appointments) {
         // Filter upcoming appointments (not cancelled or completed)
         final upcomingAppointments = appointments
-            .where((apt) =>
-                apt.status != 'CANCELLED' &&
-                apt.status != 'COMPLETED')
+            // TODO should we show cancelled appointments too?
+            .where((apt) => apt.status != AppointmentStatus.cancelled)
             .toList();
 
         if (upcomingAppointments.isEmpty) {
@@ -84,10 +84,10 @@ class AppointmentCard extends StatelessWidget {
     final date = appointment.date;
     final dateStr = DateFormat('MMM dd, yyyy').format(date);
     final timeStr = DateFormat('HH:mm').format(date);
-    final clientName = appointment.userName ?? 'Unknown Client';
-    final serviceName = appointment.service?.name ?? 'Service';
+    final clientName = appointment.userName ?? 'Client desconhecido';
+    final serviceName = appointment.service?.name ?? 'Serviço desconhecido';
     final price = appointment.service?.price ?? 0.0;
-    final status = appointment.status ?? 'PENDING';
+    final AppointmentStatus status = appointment.status;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
@@ -127,7 +127,7 @@ class AppointmentCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    status,
+                    status.displayName,
                     style: TextStyle(
                       color: _getStatusColor(status),
                       fontWeight: FontWeight.bold,
@@ -171,7 +171,7 @@ class AppointmentCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            if (status == 'PENDING') ...[
+            if (status == AppointmentStatus.pending) ...[
               const SizedBox(height: 12),
               const Divider(),
               const SizedBox(height: 8),
@@ -213,13 +213,13 @@ class AppointmentCard extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(AppointmentStatus status) {
     switch (status) {
-      case 'CONFIRMED':
+      case AppointmentStatus.confirmed:
         return Colors.green;
-      case 'PENDING':
+      case AppointmentStatus.pending:
         return Colors.orange;
-      case 'CANCELLED':
+      case AppointmentStatus.cancelled:
         return Colors.red;
       default:
         return Colors.grey;

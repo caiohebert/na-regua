@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:na_regua/db/db_types.dart';
 import 'package:na_regua/providers/booking_provider.dart';
 import 'package:na_regua/providers/barbers_provider.dart';
 import 'package:na_regua/providers/timetable_provider.dart';
@@ -8,42 +9,23 @@ import '../models/booking_model.dart';
 import '../db/booking_db.dart';
 
 class StatusText extends StatelessWidget {
-  final String status;
+  final AppointmentStatus status;
   final BookingModel booking;
 
   const StatusText({super.key, required this.status, required this.booking});
 
   Color get color {
     switch (status) {
-      case 'upcoming':
-      case 'PENDING':
-      case 'CONFIRMED':
+      case AppointmentStatus.pending:
+      case AppointmentStatus.confirmed:
         return const Color(0xFFEDB33C);
-      case 'completed':
-      case 'COMPLETED':
-        return Colors.green;
-      case 'canceled':
-      case 'CANCELLED':
+      // TODO implement completed status color
+      // case AppointmentStatus.completed:
+      //   return Colors.green;
+      case AppointmentStatus.cancelled:
         return Colors.red;
       default:
         return Colors.grey;
-    }
-  }
-
-  String get displayText {
-    switch (status) {
-      case 'upcoming':
-      case 'PENDING':
-      case 'CONFIRMED':
-        return 'AGENDADO';
-      case 'completed':
-      case 'COMPLETED':
-        return 'CONCLUÍDO';
-      case 'canceled':
-      case 'CANCELLED':
-        return 'CANCELADO';
-      default:
-        return status.toUpperCase();
     }
   }
 
@@ -56,7 +38,7 @@ class StatusText extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        displayText,
+        status.displayName,
         style: TextStyle(
           color: color,
           fontSize: 12,
@@ -248,7 +230,7 @@ class BookingCard extends StatelessWidget {
               ),
               StatusText(status: booking.status, booking: booking),
               const SizedBox(width: 8),
-              if (booking.status == 'upcoming' || booking.status == 'PENDING' || booking.status == 'CONFIRMED') ...[
+              if (booking.status == AppointmentStatus.pending || booking.status == AppointmentStatus.confirmed) ...[
                 const SizedBox(width: 8),
                 CancelButton(booking: booking),
               ],
