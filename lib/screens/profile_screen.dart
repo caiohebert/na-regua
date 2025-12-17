@@ -113,11 +113,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (pathParts.length > 1) {
             final oldPath = pathParts.last;
             await supabase.storage.from('media').remove([oldPath]);
-            print("Foto antiga apagada: $oldPath");
+            debugPrint("Foto antiga apagada: $oldPath");
           }
         } catch (e) {
           // Se der erro ao apagar a antiga, apenas logamos e continuamos o upload da nova
-          print("Aviso: Não foi possível apagar a foto antiga. $e");
+          debugPrint("Aviso: Não foi possível apagar a foto antiga. $e");
         }
       }
 

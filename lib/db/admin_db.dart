@@ -1,5 +1,6 @@
 import 'package:na_regua/db/db_types.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/date.dart';
 
 /// Get all appointments for the current barber
 Future<List<Map<String, dynamic>>> getBarberAppointments() async {
@@ -164,8 +165,9 @@ Future<List<String>> getCurrentBarberServiceIds() async {
 Future<void> addServiceToCurrentBarber(String serviceId) async {
   final supabase = Supabase.instance.client;
   final barberId = await _getCurrentBarberId();
-  if (barberId == null)
+  if (barberId == null) {
     throw Exception('Barber record not found for current user');
+  }
 
   await supabase.from('barber_services').insert({
     'barber_id': barberId,
@@ -177,8 +179,9 @@ Future<void> addServiceToCurrentBarber(String serviceId) async {
 Future<void> removeServiceFromCurrentBarber(String serviceId) async {
   final supabase = Supabase.instance.client;
   final barberId = await _getCurrentBarberId();
-  if (barberId == null)
+  if (barberId == null) {
     throw Exception('Barber record not found for current user');
+  }
 
   await supabase
       .from('barber_services')
@@ -186,3 +189,137 @@ Future<void> removeServiceFromCurrentBarber(String serviceId) async {
       .eq('barber_id', barberId)
       .eq('service_id', serviceId);
 }
+
+/// Create time slots for the current barber between two dates (inclusive).
+/// Times are strings in 'HH:MM' format (seconds will be set to ':00').
+/// Returns number of slots created.
+Future<int> createTimeSlotsForDateRange({
+  required DateTime dateStart,
+  required DateTime dateEnd,
+  required String startTime,
+  required String endTime,
+  int stepMinutes = 30,
+}) async {
+  final supabase = Supabase.instance.client;
+  final barberId = await _getCurrentBarberId();
+  if (barberId == null) throw Exception('Barber record not found for current user');
+
+  final startParts = startTime.split(':');
+  final endParts = endTime.split(':');
+  final startHour = int.parse(startParts[0]);
+  final startMinute = int.parse(startParts[1]);
+  final endHour = int.parse(endParts[0]);
+  final endMinute = int.parse(endParts[1]);
+
+  int created = 0;
+
+  for (var d = dateStart; !d.isAfter(dateEnd); d = d.add(const Duration(days: 1))) {
+    final dateStr = getDate(d);
+
+    // Build times for this day
+    var current = DateTime(d.year, d.month, d.day, startHour, startMinute);
+    final endDt = DateTime(d.year, d.month, d.day, endHour, endMinute);
+
+    // Fetch existing times for this date to avoid duplicates
+    final existingRes = await supabase
+        .from('time_slots')
+        .select('time')
+        .eq('barber_id', barberId)
+        .eq('date', dateStr);
+    final existing = (existingRes as List<dynamic>).map((e) => (e as Map<String, dynamic>)['time'] as String).toSet();
+
+    final toInsert = <Map<String, dynamic>>[];
+
+    while (!current.isAfter(endDt)) {
+      final timeStr = '${current.hour.toString().padLeft(2, '0')}:${current.minute.toString().padLeft(2, '0')}:00';
+      if (!existing.contains(timeStr)) {
+        toInsert.add({
+          'barber_id': barberId,
+          'date': dateStr,
+          'time': timeStr,
+          'status': TimeSlotStatus.available.dbName,
+        });
+      }
+      current = current.add(Duration(minutes: stepMinutes));
+    }
+
+    if (toInsert.isNotEmpty) {
+      final res = await supabase.from('time_slots').insert(toInsert).select();
+      final rows = res as List<dynamic>;
+      created += rows.length;
+    }
+  }
+
+  return created;
+}
+
+/// Delete a single time slot for the current barber. Returns number of deleted rows.
+Future<int> deleteTimeSlot({required String date, required String time}) async {
+  final supabase = Supabase.instance.client;
+  final barberId = await _getCurrentBarberId();
+  if (barberId == null) throw Exception('Barber record not found for current user');
+
+  final res = await supabase
+      .from('time_slots')
+      .delete()
+      .eq('barber_id', barberId)
+      .eq('date', date)
+      .eq('time', time)
+      .select();
+  final rows = res as List<dynamic>;
+  return rows.length;
+}
+
+/// Delete time slots for the current barber between two dates (inclusive).
+/// Optionally provide time range to only delete specific times each day.
+Future<int> deleteTimeSlotsForDateRange({
+  required DateTime dateStart,
+  required DateTime dateEnd,
+  String? startTime, // 'HH:MM' optional
+  String? endTime, // 'HH:MM' optional
+}) async {
+  final supabase = Supabase.instance.client;
+  final barberId = await _getCurrentBarberId();
+  if (barberId == null) throw Exception('Barber record not found for current user');
+
+  int deleted = 0;
+  for (var d = dateStart; !d.isAfter(dateEnd); d = d.add(const Duration(days: 1))) {
+    final dateStr = getDate(d);
+
+    var query = supabase.from('time_slots').delete().eq('barber_id', barberId).eq('date', dateStr);
+
+    if (startTime != null && endTime != null) {
+      final s = '$startTime:00';
+      final e = '$endTime:00';
+      query = query.gte('time', s).lte('time', e);
+    }
+
+    final res = await query.select();
+    final rows = res as List<dynamic>;
+    deleted += rows.length;
+  }
+
+  return deleted;
+}
+
+/// Insert multiple explicit time slots for current barber. Each entry in `slots`
+/// must be a map with keys: 'date' (YYYY-MM-DD) and 'time' (HH:MM:SS).
+/// Returns number of rows inserted.
+Future<int> insertTimeSlotsBulk(List<Map<String, String>> slots) async {
+  if (slots.isEmpty) return 0;
+  final supabase = Supabase.instance.client;
+  final barberId = await _getCurrentBarberId();
+  if (barberId == null) throw Exception('Barber record not found for current user');
+
+  final payload = slots.map((s) => {
+        'barber_id': barberId,
+        'date': s['date'],
+        'time': s['time'],
+        'status': TimeSlotStatus.available.dbName,
+      }).toList();
+
+  final res = await supabase.from('time_slots').insert(payload).select();
+  final rows = res as List<dynamic>;
+  return rows.length;
+}
+
