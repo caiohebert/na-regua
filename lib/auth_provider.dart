@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,7 +32,7 @@ class Auth extends _$Auth {
       // Web uses OAuth redirect flow.
       if (kIsWeb) {
         debugPrint('Starting Google OAuth sign-in...');
-        
+
         // Use externalApplication mode to force opening in a new tab/window
         // This avoids popup blockers and iframe issues
         final result = await supabaseAuth.signInWithOAuth(
@@ -40,9 +40,10 @@ class Auth extends _$Auth {
           redirectTo: kIsWeb ? Uri.base.toString() : null,
           authScreenLaunchMode: LaunchMode.externalApplication,
         );
-        
+
         debugPrint('OAuth initiated: $result');
-      } else if (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS) {
+      } else if (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS) {
         // Mobile uses native Google Sign-In, then exchanges token with Supabase.
         final googleSignIn = GoogleSignIn.instance;
         await googleSignIn.initialize();
@@ -88,11 +89,13 @@ class Auth extends _$Auth {
   Future<void> signUpWithEmailPassword({
     required String email,
     required String password,
+    required String name,
   }) async {
     try {
       await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
+        data: {'full_name': name},
       );
     } catch (e) {
       debugPrint('Error signing up with email/password: $e');
