@@ -6,6 +6,8 @@ import 'package:na_regua/screens/profile_screen.dart';
 import 'package:na_regua/screens/bookings_screen.dart';
 import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/user_role_provider.dart';
+import 'package:na_regua/screens/admin_user_management_screen.dart';
+import 'package:na_regua/db/db_types.dart';
 
 class MainScaffold extends ConsumerWidget {
   const MainScaffold({super.key});
@@ -51,43 +53,64 @@ class MainScaffold extends ConsumerWidget {
     int currentIndex, {
     bool showBarberAdminAccess = false,
   }) {
-    final List<Widget> screens = [
-      HomeScreen(showBarberAdminAccess: showBarberAdminAccess),
-      const ScheduleScreen(),
-      const BookingsScreen(),
-      const ProfileScreen(),
-    ];
+    final userRoleAsync = ref.watch(userRoleProvider);
+    return userRoleAsync.when(
+      data: (role) {
+        final List<Widget> screens = [
+          HomeScreen(showBarberAdminAccess: showBarberAdminAccess),
+          const ScheduleScreen(),
+          const BookingsScreen(),
+          const ProfileScreen(),
+        ];
 
-    return Scaffold(
-      body: screens[currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex > 3 ? 0 : currentIndex,
-        onTap: (index) {
-          ref.read(navigationProvider.notifier).setIndex(index);
-        },
-        items: const [
-          BottomNavigationBarItem(
+        final List<BottomNavigationBarItem> items = [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today_outlined),
             activeIcon: Icon(Icons.calendar_today),
             label: 'Agendar',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long_outlined),
             activeIcon: Icon(Icons.receipt_long),
             label: 'Agendamentos',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Perfil',
           ),
-        ],
-      ),
+        ];
+
+        if (role == UserRole.admin) {
+          // append admin management screen and nav item
+          screens.add(const AdminUserManagementScreen());
+          items.add(const BottomNavigationBarItem(
+            icon: Icon(Icons.admin_panel_settings_outlined),
+            activeIcon: Icon(Icons.admin_panel_settings),
+            label: 'Admin',
+          ));
+        }
+
+        final safeIndex = (currentIndex < 0 || currentIndex >= screens.length) ? 0 : currentIndex;
+
+        return Scaffold(
+          body: screens[safeIndex],
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: safeIndex,
+            onTap: (index) {
+              ref.read(navigationProvider.notifier).setIndex(index);
+            },
+            items: items,
+          ),
+        );
+      },
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) => Scaffold(body: Center(child: Text('Erro ao carregar role: $e'))),
     );
   }
 }
