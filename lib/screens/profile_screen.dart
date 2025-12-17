@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart'; // Pacote para pegar a imagem
 import 'package:na_regua/auth_provider.dart';
 import 'package:na_regua/db/user_db.dart';
-import 'package:na_regua/providers/navigation_provider.dart';
 import 'package:na_regua/providers/barber_profile_provider.dart';
 import 'package:na_regua/providers/user_role_provider.dart';
 import 'package:na_regua/providers/services_provider.dart';
@@ -91,63 +90,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _askBecomeBarber() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Quer deixar as pessoas na Régua?'),
-        content: const Text(
-          'Ao aceitar, você terá acesso ao Dashboard de Barbeiro para gerenciar agenda e serviços.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Agora não'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Quero ser barbeiro'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() {
-      _isPromoting = true;
-      _barberError = null;
-    });
-
-    try {
-      await promoteUserToBarber();
-      if (!mounted) return;
-
-      // Refresh role-dependent UI and send user to dashboard tab
-      ref.invalidate(userRoleProvider);
-      ref.invalidate(isBarberProvider);
-      ref.read(navigationProvider.notifier).setIndex(0);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Perfil atualizado para Barbeiro!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _barberError = 'Não foi possível atualizar. Tente novamente. ($e)';
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isPromoting = false;
-        });
-      }
-    }
-  }
+  // _askBecomeBarber removed completely as promotions are admin-only now.
 
   Future<void> _saveBarberSettings() async {
     setState(() {
@@ -320,51 +263,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               isBarberAsync.maybeWhen(
-                data: (isBarber) {
-                  if (!isBarber) {
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Quer deixar as pessoas na Régua?',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Vire barbeiro para gerenciar agenda, confirmar clientes e cadastrar serviços.',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: _isPromoting ? null : _askBecomeBarber,
-                                icon: _isPromoting
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.cut_outlined),
-                                label: Text(
-                                  _isPromoting
-                                      ? 'Atualizando...'
-                                      : 'Ativar dashboard de barbeiro',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
+                          data: (isBarber) {
+                            if (!isBarber) {
+                              return const SizedBox.shrink();
+                            }
 
                   // Barber settings
                   return Card(
