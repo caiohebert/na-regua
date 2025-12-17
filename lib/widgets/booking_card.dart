@@ -190,7 +190,7 @@ class BookingCard extends StatelessWidget {
     return Container(
       width: 48,
       height: 48,
-      color: Colors.grey[800], // Um cinza escuro fica melhor no tema dark
+      color: Colors.grey[800],
       child: const Icon(Icons.person, color: Colors.white),
     );
   }
@@ -213,7 +213,6 @@ class BookingCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              // --- MUDANÇA AQUI ---
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: hasImage
@@ -222,8 +221,7 @@ class BookingCard extends StatelessWidget {
                         width: 48,
                         height: 48,
                         fit: BoxFit.cover,
-                        // Se a URL existir mas a imagem falhar (ex: link quebrado),
-                        // mostra o ícone instantaneamente
+
                         errorBuilder: (context, error, stackTrace) =>
                             _buildPlaceholder(),
                       )
