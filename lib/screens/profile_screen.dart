@@ -42,7 +42,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final ImagePicker picker = ImagePicker();
 
     try {
-      final XFile? image = await picker.pickImage(source: source);
+      final XFile? image = await picker.pickImage(
+        source: source,
+        imageQuality: 70,
+        maxWidth:
+            800, // Limita a largura a 800px (suficiente para telas de celular)
+        maxHeight: 800,
+      );
 
       if (image != null) {
         final imageFile = File(image.path);
