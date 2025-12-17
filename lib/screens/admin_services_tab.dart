@@ -19,24 +19,20 @@ class AdminServicesTab extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.content_cut,
-                    size: 80,
-                    color: Colors.grey[400],
-                  ),
+                  Icon(Icons.content_cut, size: 80, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   Text(
                     'Nenhum serviço',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Toque + para adicionar seu primeiro serviço',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[500],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -74,7 +70,11 @@ class AdminServicesTab extends ConsumerWidget {
     );
   }
 
-  void _showServiceDialog(BuildContext context, WidgetRef ref, {ServiceModel? service}) {
+  void _showServiceDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    ServiceModel? service,
+  }) {
     showDialog(
       context: context,
       builder: (context) => ServiceFormDialog(
@@ -110,10 +110,7 @@ class ServiceListItem extends StatelessWidget {
         ),
         title: Text(
           service.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,11 +154,7 @@ class ServiceFormDialog extends StatefulWidget {
   final ServiceModel? service;
   final VoidCallback onSaved;
 
-  const ServiceFormDialog({
-    super.key,
-    this.service,
-    required this.onSaved,
-  });
+  const ServiceFormDialog({super.key, this.service, required this.onSaved});
 
   @override
   State<ServiceFormDialog> createState() => _ServiceFormDialogState();
@@ -229,12 +222,14 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(
-                  labelText: 'Preço (\R\$)',
+                  labelText: 'Preço (R\$)',
                   hintText: 'Ex: 30.00',
                   border: OutlineInputBorder(),
                   prefixText: '\$ ',
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira um preço para o serviço';
@@ -282,10 +277,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
         if (isEdit)
           TextButton(
             onPressed: _isLoading ? null : _deleteService,
-            child: const Text(
-              'Deletar',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Deletar', style: TextStyle(color: Colors.red)),
           ),
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
@@ -422,5 +414,3 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
     }
   }
 }
-
-

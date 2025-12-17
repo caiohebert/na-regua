@@ -8,7 +8,8 @@ class RoleSelectionScreen extends ConsumerStatefulWidget {
   const RoleSelectionScreen({super.key});
 
   @override
-  ConsumerState<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
+  ConsumerState<RoleSelectionScreen> createState() =>
+      _RoleSelectionScreenState();
 }
 
 class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
@@ -26,21 +27,22 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
       // Update user metadata with selected role
       final supabase = Supabase.instance.client;
       await supabase.auth.updateUser(
-        UserAttributes(
-          data: {'selected_role': _selectedRole},
-        ),
+        UserAttributes(data: {'selected_role': _selectedRole}),
       );
 
       // Create user in database with selected role
       // This will also create barber profile if role is barber
-      final role = _selectedRole == 'barber' ? UserRole.admin : UserRole.customer;
+      final role = _selectedRole == 'barber'
+          ? UserRole.admin
+          : UserRole.customer;
       await insertUserFromSession(role);
 
       // Navigation will be handled automatically by AuthenticationWrapper
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Erro ao configurar conta. Por favor, tente novamente.';
+          _errorMessage =
+              'Erro ao configurar conta. Por favor, tente novamente.';
           _isLoading = false;
         });
       }
@@ -57,45 +59,49 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              
+
               // Icon
               Icon(
                 Icons.person_outline,
                 size: 80,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Title
               Text(
                 'Tipo de Conta',
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               Text(
                 'Selecione como você vai usar o aplicativo',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Error message
               if (_errorMessage != null)
                 Container(
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.error.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Text(
@@ -106,7 +112,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                     ),
                   ),
                 ),
-              
+
               // Role selection cards
               Card(
                 elevation: _selectedRole == 'customer' ? 4 : 0,
@@ -114,11 +120,13 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: InkWell(
-                  onTap: _isLoading ? null : () {
-                    setState(() {
-                      _selectedRole = 'customer';
-                    });
-                  },
+                  onTap: _isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _selectedRole = 'customer';
+                          });
+                        },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -134,19 +142,19 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         const SizedBox(height: 12),
                         Text(
                           'Cliente',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: _selectedRole == 'customer'
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: _selectedRole == 'customer'
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Agendar cortes e serviços',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -154,20 +162,22 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               Card(
                 elevation: _selectedRole == 'barber' ? 4 : 0,
                 color: _selectedRole == 'barber'
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: InkWell(
-                  onTap: _isLoading ? null : () {
-                    setState(() {
-                      _selectedRole = 'barber';
-                    });
-                  },
+                  onTap: _isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _selectedRole = 'barber';
+                          });
+                        },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -183,19 +193,19 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         const SizedBox(height: 12),
                         Text(
                           'Barbeiro',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: _selectedRole == 'barber'
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: _selectedRole == 'barber'
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Gerenciar agenda e serviços',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -203,9 +213,9 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Continue button
               ElevatedButton(
                 onPressed: _isLoading ? null : _handleRoleSelection,
@@ -220,7 +230,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                       )
                     : const Text('Continuar'),
               ),
-              
+
               const Spacer(),
             ],
           ),
@@ -229,4 +239,3 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
     );
   }
 }
-
