@@ -80,7 +80,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               servicesAsync.when(
                 data: (services) => ServicePicker(
                   services: services,
-                  onServiceSelected: (service) => setState(() => _selectedService = service),
+                  onServiceSelected: (service) => setState(() {
+                    _selectedService = service;
+                    _selectedBarber = null;
+                    _selectedTime = null;
+                  }),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) => Center(child: Text('Error: $error')),
@@ -101,13 +105,26 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               
               const SizedBox(height: 32),
 
-              BarberPicker(
-                date: _selectedDate,
-                onBarberSelected: (barber) => setState(() {
-                  _selectedBarber = barber;
-                  _selectedTime = null; // Reset time when barber changes
-                }),
-              ),
+              if (_selectedService == null) ...[
+                Text(
+                  'Selecione um serviço primeiro',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Escolha um serviço para ver os profissionais disponíveis nessa data.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                ),
+              ] else ...[
+                BarberPicker(
+                  date: _selectedDate,
+                  selectedService: _selectedService,
+                  onBarberSelected: (barber) => setState(() {
+                    _selectedBarber = barber;
+                    _selectedTime = null; // Reset time when barber changes
+                  }),
+                ),
+              ],
               
               const SizedBox(height: 32),
               
@@ -139,7 +156,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                         ref.invalidate(bookingsProvider);
 
                         // Refresh availability for the selected day/barber
-                        ref.invalidate(barbersProvider(_selectedDate));
+                        ref.invalidate(barbersProvider(BarbersParams(date: _selectedDate, serviceId: _selectedService?.id)));
                         ref.invalidate(
                           timetableProvider(
                             TimetableParams(barber: _selectedBarber, date: _selectedDate),

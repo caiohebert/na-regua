@@ -8,3 +8,8 @@ final barberAppointmentsProvider = FutureProvider.autoDispose<List<BookingModel>
   return data.map((e) => BookingModel.fromJson(e)).toList();
 });
 
+/// Provider exposing list of service ids the current barber offers
+final barberServicesProvider = FutureProvider.autoDispose<List<String>>((ref) async {
+  return getCurrentBarberServiceIds();
+});
+

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/barber_model.dart';
+import '../models/service_model.dart';
 import '../providers/barbers_provider.dart';
 import 'barber_card.dart';
 
 class BarberPicker extends ConsumerStatefulWidget {
   final DateTime date;
+  final ServiceModel? selectedService;
   final ValueChanged<BarberModel> onBarberSelected;
 
   const BarberPicker({
     super.key,
     required this.date,
+    this.selectedService,
     required this.onBarberSelected,
   });
 
@@ -23,7 +26,7 @@ class _BarberPickerState extends ConsumerState<BarberPicker> {
 
   @override
   Widget build(BuildContext context) {
-    final barbersAsync = ref.watch(barbersProvider(widget.date));
+    final barbersAsync = ref.watch(barbersProvider(BarbersParams(date: widget.date, serviceId: widget.selectedService?.id)));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
