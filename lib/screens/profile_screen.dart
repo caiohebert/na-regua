@@ -1,5 +1,6 @@
 import 'dart:io'; // Necessário para manipular o arquivo da imagem
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart'; // Pacote para pegar a imagem
@@ -19,7 +20,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  File? _selectedImage; // Variável para guardar a imagem selecionada
+  XFile? _selectedImage; // Variável para guardar a imagem selecionada
   bool _isUploadingImage = false;
   bool _isPromoting = false;
   String? _barberError;
@@ -51,14 +52,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
 
       if (image != null) {
-        final imageFile = File(image.path);
-
         setState(() {
-          _selectedImage = imageFile;
+          _selectedImage = image;
         });
 
         // CHAMA O UPLOAD IMEDIATAMENTE
-        await _uploadAndSaveImage(imageFile);
+        await _uploadAndSaveImage(image);
       }
     } catch (e) {
       debugPrint('Erro ao selecionar imagem: $e');
@@ -97,7 +96,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _uploadAndSaveImage(File imageFile) async {
+  Future<void> _uploadAndSaveImage(XFile imageFile) async {
     final supabase = Supabase.instance.client;
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
@@ -128,19 +127,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
 
       // prepara nome do arquivo
-      final fileExtension = imageFile.path.split('.').last;
+      final fileExtension = imageFile.name.split('.').last;
       final fileName =
           'profile_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
       final filePath = 'users/avatars/$userId/$fileName';
 
       // envia para o Storage (Bucket 'files')
-      await supabase.storage
-          .from('media')
-          .upload(
-            filePath,
-            imageFile,
-            fileOptions: const FileOptions(upsert: true),
-          );
+      if (kIsWeb) {
+        final bytes = await imageFile.readAsBytes();
+        await supabase.storage.from('media').uploadBinary(
+              filePath,
+              bytes,
+              fileOptions: const FileOptions(upsert: true),
+            );
+      } else {
+        await supabase.storage.from('media').upload(
+              filePath,
+              File(imageFile.path),
+              fileOptions: const FileOptions(upsert: true),
+            );
+      }
 
       // pega a url publica do supa
       final imageUrl = supabase.storage.from('media').getPublicUrl(filePath);
@@ -282,7 +288,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               // 2º: Foto salva no banco de dados (URL)
                               // 3º: Null (para cair no child e mostrar o ícone)
                               backgroundImage: _selectedImage != null
-                                  ? FileImage(_selectedImage!) as ImageProvider
+                                  ? (kIsWeb
+                                      ? NetworkImage(_selectedImage!.path)
+                                      : FileImage(File(_selectedImage!.path)))
+                                      as ImageProvider
                                   : (remoteAvatarUrl != null &&
                                             remoteAvatarUrl.isNotEmpty
                                         ? NetworkImage(remoteAvatarUrl)
