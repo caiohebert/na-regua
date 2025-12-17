@@ -4,8 +4,8 @@ import 'package:na_regua/db/admin_db.dart';
 import 'package:na_regua/models/service_model.dart';
 import 'package:na_regua/providers/services_provider.dart';
 
-class AdminServicesTab extends ConsumerWidget {
-  const AdminServicesTab({super.key});
+class BarberServicesTab extends ConsumerWidget {
+  const BarberServicesTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

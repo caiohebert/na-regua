@@ -5,8 +5,8 @@ import 'package:na_regua/db/admin_db.dart';
 import 'package:na_regua/db/db_types.dart';
 import 'package:na_regua/providers/admin_provider.dart';
 
-class AdminScheduleTab extends ConsumerWidget {
-  const AdminScheduleTab({super.key});
+class BarberScheduleTab extends ConsumerWidget {
+  const BarberScheduleTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

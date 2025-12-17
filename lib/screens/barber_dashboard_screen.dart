@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:na_regua/screens/admin_schedule_tab.dart';
-import 'package:na_regua/screens/admin_services_tab.dart';
+import 'package:na_regua/screens/barber_schedule_tab.dart';
+import 'package:na_regua/screens/barber_services_tab.dart';
 
-class AdminDashboardScreen extends ConsumerWidget {
-  const AdminDashboardScreen({super.key});
+class BarberDashboardScreen extends ConsumerWidget {
+  const BarberDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,8 +28,8 @@ class AdminDashboardScreen extends ConsumerWidget {
         ),
         body: const TabBarView(
           children: [
-            AdminScheduleTab(),
-            AdminServicesTab(),
+            BarberScheduleTab(),
+            BarberServicesTab(),
           ],
         ),
       ),
