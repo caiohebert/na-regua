@@ -28,7 +28,7 @@ class BarberModel {
       name: userRef['name']! as String,
       description: json['description'] as String?,
       rating: (json['rating'] as num?)?.toDouble(),
-      avatarUrl: json['avatar_url'] as String?,
+      avatarUrl: userRef['avatar_url'] as String?,
       location: json['location'] as String?,
       services:
           (json['services'] as List<dynamic>?)
