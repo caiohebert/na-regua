@@ -88,7 +88,7 @@ class CancelButton extends ConsumerWidget {
                 ref.invalidate(bookingsProvider);
 
                 // 4. Atualiza disponibilidade (cancelamento libera o horário)
-                ref.invalidate(barbersProvider(booking.date));
+                ref.invalidate(barbersProvider(BarbersParams(date: booking.date, serviceId: booking.service?.id)));
                 ref.invalidate(
                   timetableProvider(
                     TimetableParams(barber: booking.barber, date: booking.date),

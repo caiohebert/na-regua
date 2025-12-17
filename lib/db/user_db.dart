@@ -127,7 +127,12 @@ Future<void> updateBarberProfile({
 }
 
 /// Promote current user to admin (barber dashboard) and ensure barber profile
-Future<void> promoteUserToAdminBarber() async {
-  await updateUserRole(UserRole.admin);
+Future<void> promoteUserToBarber() async {
+  await updateUserRole(UserRole.barber);
   await ensureBarberProfile();
+}
+
+// Backwards-compatible alias: some code used the old name promoteUserToAdminBarber
+Future<void> promoteUserToAdminBarber() async {
+  return promoteUserToBarber();
 }

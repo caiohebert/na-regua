@@ -24,6 +24,6 @@ final userRoleProvider = FutureProvider<UserRole>((ref) async {
 /// Provider to check if current user is a barber
 final isBarberProvider = FutureProvider<bool>((ref) async {
   final role = await ref.watch(userRoleProvider.future);
-  return role == UserRole.barber || role == UserRole.admin;
+  return role == UserRole.barber;
 });
 

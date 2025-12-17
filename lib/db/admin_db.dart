@@ -102,3 +102,58 @@ Future<void> deleteService(String serviceId) async {
       .eq('id', serviceId);
 }
 
+/// Helper to get current barber id for authenticated user
+Future<String?> _getCurrentBarberId() async {
+  final supabase = Supabase.instance.client;
+  final userId = supabase.auth.currentUser!.id;
+
+  final barberData = await supabase
+      .from('barbers')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+  if (barberData == null) return null;
+  return barberData['id'] as String;
+}
+
+/// Get service ids associated with current barber
+Future<List<String>> getCurrentBarberServiceIds() async {
+  final supabase = Supabase.instance.client;
+  final barberId = await _getCurrentBarberId();
+  if (barberId == null) return [];
+
+  final rows = await supabase
+      .from('barber_services')
+      .select('service_id')
+      .eq('barber_id', barberId);
+
+  final list = (rows as List<dynamic>).map((e) => (e as Map<String, dynamic>)['service_id'] as String).toList();
+  return list;
+}
+
+/// Add a service to current barber
+Future<void> addServiceToCurrentBarber(String serviceId) async {
+  final supabase = Supabase.instance.client;
+  final barberId = await _getCurrentBarberId();
+  if (barberId == null) throw Exception('Barber record not found for current user');
+
+  await supabase.from('barber_services').insert({
+    'barber_id': barberId,
+    'service_id': serviceId,
+  });
+}
+
+/// Remove a service from current barber
+Future<void> removeServiceFromCurrentBarber(String serviceId) async {
+  final supabase = Supabase.instance.client;
+  final barberId = await _getCurrentBarberId();
+  if (barberId == null) throw Exception('Barber record not found for current user');
+
+  await supabase
+      .from('barber_services')
+      .delete()
+      .eq('barber_id', barberId)
+      .eq('service_id', serviceId);
+}
+

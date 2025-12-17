@@ -23,17 +23,18 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
     });
 
     try {
-      // Update user metadata with selected role
+      // Create a proper `UserRole` value from the selection
+      final UserRole role = _selectedRole == 'barber' ? UserRole.barber : UserRole.customer;
+
+      // Update user metadata with the canonical DB role name
       final supabase = Supabase.instance.client;
       await supabase.auth.updateUser(
         UserAttributes(
-          data: {'selected_role': _selectedRole},
+          data: {'selected_role': role.dbName},
         ),
       );
 
-      // Create user in database with selected role
-      // This will also create barber profile if role is barber
-      final role = _selectedRole == 'barber' ? UserRole.admin : UserRole.customer;
+      // Create user in database with the chosen role (will create barber profile when role == barber)
       await insertUserFromSession(role);
 
       // Navigation will be handled automatically by AuthenticationWrapper

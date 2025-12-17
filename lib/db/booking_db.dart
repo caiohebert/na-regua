@@ -46,21 +46,39 @@ Future<List<Map<String, dynamic>>> getAllServices() async {
   return services;
 }
 
-Future<List<Map<String, dynamic>>> getAllAvailableBarbers(DateTime date) async {
+Future<List<Map<String, dynamic>>> getAllAvailableBarbers(DateTime date, {String? serviceId}) async {
   final supabase = Supabase.instance.client;
   
   /*
+  Base query:
   SELECT DISTINCT(b.*)
   FROM barbers as b
   INNER JOIN time_slots as t ON b.id = t.barber_id
   WHERE t.date = <date> AND t.status = 'AVAILABLE'
+
+  If serviceId is provided, also INNER JOIN barber_services as bs
+  ON b.id = bs.barber_id AND bs.service_id = <serviceId>
   */
+  final bookingDate = getDate(date);
+
+  if (serviceId == null) {
+    final barbers = await supabase
+        .from('barbers')
+        .select('*, time_slots!inner(*), users!inner(*)') // !inner enforces INNER JOIN behavior
+        .eq('time_slots.date', bookingDate)
+        .eq('time_slots.status', 'AVAILABLE');
+    return barbers;
+  }
+
+  // serviceId provided -> ensure barber provides that service via barber_services
   final barbers = await supabase
       .from('barbers')
-      .select('*, time_slots!inner(*), users!inner(*)') // !inner enforces INNER JOIN behavior
-      .eq('time_slots.date', getDate(date))
-      .eq('time_slots.status', 'AVAILABLE');
-  return barbers; 
+      .select('*, time_slots!inner(*), users!inner(*), barber_services!inner(*)')
+      .eq('time_slots.date', bookingDate)
+      .eq('time_slots.status', 'AVAILABLE')
+      .eq('barber_services.service_id', serviceId);
+
+  return barbers;
 }
 
 
