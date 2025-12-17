@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:na_regua/db/admin_db.dart';
 import 'package:na_regua/models/service_model.dart';
 import 'package:na_regua/providers/services_provider.dart';
+import 'package:na_regua/db/admin_db.dart';
 
 class AdminServicesTab extends ConsumerWidget {
   const AdminServicesTab({super.key});
@@ -29,7 +29,7 @@ class AdminServicesTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Toque + para adicionar seu primeiro serviço',
+                    'Toque + para adicionar o primeiro serviço',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
@@ -44,9 +44,9 @@ class AdminServicesTab extends ConsumerWidget {
             itemCount: services.length,
             itemBuilder: (context, index) {
               final service = services[index];
-              return ServiceListItem(
+              return ServiceListItemAdmin(
                 service: service,
-                onTap: () => _showServiceDialog(context, ref, service: service),
+                onSaved: () => ref.invalidate(servicesProvider),
               );
             },
           );
@@ -70,30 +70,26 @@ class AdminServicesTab extends ConsumerWidget {
     );
   }
 
-  void _showServiceDialog(
-    BuildContext context,
-    WidgetRef ref, {
-    ServiceModel? service,
-  }) {
-    showDialog(
+  void _showServiceDialog(BuildContext context, WidgetRef ref, {ServiceModel? service}) {
+    showDialog<bool>(
       context: context,
       builder: (context) => ServiceFormDialog(
         service: service,
         onSaved: () => ref.invalidate(servicesProvider),
       ),
-    );
+    ).then((saved) {
+      if (saved == true) {
+        ref.invalidate(servicesProvider);
+      }
+    });
   }
 }
 
-class ServiceListItem extends StatelessWidget {
+class ServiceListItemAdmin extends StatelessWidget {
   final ServiceModel service;
-  final VoidCallback onTap;
+  final VoidCallback onSaved;
 
-  const ServiceListItem({
-    super.key,
-    required this.service,
-    required this.onTap,
-  });
+  const ServiceListItemAdmin({super.key, required this.service, required this.onSaved});
 
   @override
   Widget build(BuildContext context) {
@@ -144,11 +140,16 @@ class ServiceListItem extends StatelessWidget {
           ],
         ),
         trailing: const Icon(Icons.edit),
-        onTap: onTap,
+        onTap: () => showDialog(
+          context: context,
+          builder: (context) => ServiceFormDialog(service: service, onSaved: onSaved),
+        ),
       ),
     );
   }
 }
+
+// Reuse the ServiceFormDialog from the original barber_services_tab; import via admin_db.dart functions
 
 class ServiceFormDialog extends StatefulWidget {
   final ServiceModel? service;
@@ -172,15 +173,9 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.service?.name ?? '');
-    _priceController = TextEditingController(
-      text: widget.service?.price.toStringAsFixed(2) ?? '',
-    );
-    _durationController = TextEditingController(
-      text: widget.service?.durationMinutes.toString() ?? '',
-    );
-    _descriptionController = TextEditingController(
-      text: widget.service?.description ?? '',
-    );
+    _priceController = TextEditingController(text: widget.service?.price.toStringAsFixed(2) ?? '');
+    _durationController = TextEditingController(text: widget.service?.durationMinutes.toString() ?? '');
+    _descriptionController = TextEditingController(text: widget.service?.description ?? '');
   }
 
   @override
@@ -212,9 +207,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira um nome para o serviço';
-                  }
+                  if (value == null || value.isEmpty) return 'Por favor, insira um nome para o serviço';
                   return null;
                 },
               ),
@@ -227,16 +220,10 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
                   border: OutlineInputBorder(),
                   prefixText: '\$ ',
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira um preço para o serviço';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Por favor, insira um número válido';
-                  }
+                  if (value == null || value.isEmpty) return 'Por favor, insira um preço para o serviço';
+                  if (double.tryParse(value) == null) return 'Por favor, insira um número válido';
                   return null;
                 },
               ),
@@ -250,12 +237,8 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira a duração do serviço';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Por favor, insira um número válido';
-                  }
+                  if (value == null || value.isEmpty) return 'Por favor, insira a duração do serviço';
+                  if (int.tryParse(value) == null) return 'Por favor, insira um número válido';
                   return null;
                 },
               ),
@@ -280,17 +263,13 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
             child: const Text('Deletar', style: TextStyle(color: Colors.red)),
           ),
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          onPressed: _isLoading ? null : () => Navigator.pop(context, false),
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveService,
           child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
               : Text(isEdit ? 'Atualizar' : 'Criar'),
         ),
       ],
@@ -298,10 +277,7 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
   }
 
   Future<void> _saveService() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
+    if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
     try {
@@ -311,72 +287,32 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
       final description = _descriptionController.text.trim();
 
       if (widget.service != null) {
-        // Update existing service
-        await updateService(
-          serviceId: widget.service!.id,
-          name: name,
-          price: price,
-          durationMinutes: duration,
-          description: description.isEmpty ? null : description,
-        );
+        await updateService(serviceId: widget.service!.id, name: name, price: price, durationMinutes: duration, description: description.isEmpty ? null : description);
       } else {
-        // Create new service
-        await createService(
-          name: name,
-          price: price,
-          durationMinutes: duration,
-          description: description.isEmpty ? null : description,
-        );
+        await createService(name: name, price: price, durationMinutes: duration, description: description.isEmpty ? null : description);
       }
 
       if (mounted) {
         widget.onSaved();
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.service != null
-                  ? 'Serviço atualizado com sucesso'
-                  : 'Serviço criado com sucesso',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.service != null ? 'Serviço atualizado com sucesso' : 'Serviço criado com sucesso'), backgroundColor: Colors.green));
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar serviço: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao salvar serviço: $e'), backgroundColor: Colors.red));
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _deleteService() async {
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Deletar Serviço'),
-        content: const Text(
-          'Tem certeza que deseja deletar este serviço? Esta ação não pode ser desfeita.',
-        ),
+        content: const Text('Tem certeza que deseja deletar este serviço? Esta ação não pode ser desfeita.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Deletar', style: TextStyle(color: Colors.red)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Deletar', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -384,33 +320,17 @@ class _ServiceFormDialogState extends State<ServiceFormDialog> {
     if (confirmed != true || !mounted) return;
 
     setState(() => _isLoading = true);
-
     try {
       await deleteService(widget.service!.id);
-
       if (mounted) {
         widget.onSaved();
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Serviço deletado com sucesso'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Serviço deletado com sucesso'), backgroundColor: Colors.orange));
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao deletar serviço: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao deletar serviço: $e'), backgroundColor: Colors.red));
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

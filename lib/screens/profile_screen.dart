@@ -4,14 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart'; // Pacote para pegar a imagem
 import 'package:na_regua/auth_provider.dart';
-import 'package:na_regua/db/admin_db.dart';
 import 'package:na_regua/db/user_db.dart';
-import 'package:na_regua/providers/admin_provider.dart';
 import 'package:na_regua/providers/barber_profile_provider.dart';
-import 'package:na_regua/providers/services_provider.dart';
-import 'package:na_regua/providers/user_role_provider.dart';
+import 'package:na_regua/providers/user_role_provider.dart'; // services management moved to Admin area; barber selection moved to Barber area
 import 'package:na_regua/screens/welcome_screen.dart';
-import 'package:na_regua/widgets/service_card.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Mudamos para StatefulWidget para poder atualizar a imagem na tela
@@ -28,9 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isPromoting = false;
   String? _barberError;
   bool _barberFieldsInitialized = false;
-  bool _barberServicesInitialized = false;
-  // local selection state for services (only persisted on save)
-  final Set<String> _selectedServiceIds = {};
+
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _imageUrlController = TextEditingController();
@@ -202,19 +196,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ? null
             : _locationController.text.trim(),
       );
-
-      // Persist services selection: compute diffs against current DB state
-      final existingIds = await getCurrentBarberServiceIds();
-      final toAdd = _selectedServiceIds.difference(existingIds.toSet());
-      final toRemove = existingIds.toSet().difference(_selectedServiceIds);
-
-      // Execute DB updates
-      for (final id in toAdd) {
-        await addServiceToCurrentBarber(id);
-      }
-      for (final id in toRemove) {
-        await removeServiceFromCurrentBarber(id);
-      }
 
       if (mounted) {
         ref.invalidate(barberProfileProvider);
@@ -411,75 +392,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               labelText: 'Descrição',
                               hintText: 'Fale sobre você e seus serviços',
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          // Services selection for barber
-                          Text(
-                            'Serviços oferecidos',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Selecione os serviços que você oferece. Os clientes poderão agendar apenas os serviços marcados aqui.',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                          const SizedBox(height: 12),
-                          Consumer(
-                            builder: (context, ref, _) {
-                              final servicesAsync = ref.watch(servicesProvider);
-                              final barberServicesAsync = ref.watch(
-                                barberServicesProvider,
-                              );
-
-                              // initialize local selection once when provider loads
-                              barberServicesAsync.whenData((selectedIds) {
-                                if (!_barberServicesInitialized) {
-                                  _selectedServiceIds.clear();
-                                  _selectedServiceIds.addAll(selectedIds);
-                                  _barberServicesInitialized = true;
-                                }
-                              });
-
-                              return servicesAsync.when(
-                                data: (services) {
-                                  return Column(
-                                    children: services.map((service) {
-                                      final isSelected = _selectedServiceIds
-                                          .contains(service.id);
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 12,
-                                        ),
-                                        child: ServiceCard(
-                                          service: service,
-                                          icon: service.icon,
-                                          isSelected: isSelected,
-                                          onTap: () {
-                                            setState(() {
-                                              if (isSelected) {
-                                                _selectedServiceIds.remove(
-                                                  service.id,
-                                                );
-                                              } else {
-                                                _selectedServiceIds.add(
-                                                  service.id,
-                                                );
-                                              }
-                                            });
-                                          },
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                },
-                                loading: () => const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                                error: (e, s) =>
-                                    Center(child: Text('Erro: $e')),
-                              );
-                            },
                           ),
                           const SizedBox(height: 12),
                           TextField(

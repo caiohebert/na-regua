@@ -71,12 +71,16 @@ Future<void> createService({
 }) async {
   final supabase = Supabase.instance.client;
 
-  await supabase.from('services').insert({
+  final res = await supabase.from('services').insert({
     'name': name,
     'price': price,
     'duration': durationMinutes,
     'description': description,
-  });
+  }).select();
+  final rows = res as List;
+  if (rows.isEmpty) {
+    throw Exception('Failed to create service. Check DB policies/permissions.');
+  }
 }
 
 /// Update an existing service
@@ -89,7 +93,7 @@ Future<void> updateService({
 }) async {
   final supabase = Supabase.instance.client;
 
-  await supabase
+  final res = await supabase
       .from('services')
       .update({
         'name': name,
@@ -97,14 +101,31 @@ Future<void> updateService({
         'duration': durationMinutes,
         'description': description,
       })
-      .eq('id', serviceId);
+      .eq('id', serviceId)
+      .select();
+  final rows = res as List;
+  if (rows.isEmpty) {
+    throw Exception(
+      'Failed to update service (id=$serviceId). Check DB policies/permissions.',
+    );
+  }
 }
 
 /// Delete a service
 Future<void> deleteService(String serviceId) async {
   final supabase = Supabase.instance.client;
 
-  await supabase.from('services').delete().eq('id', serviceId);
+  final res = await supabase
+      .from('services')
+      .delete()
+      .eq('id', serviceId)
+      .select();
+  final rows = res as List;
+  if (rows.isEmpty) {
+    throw Exception(
+      'Failed to delete service (id=$serviceId). Check DB policies/permissions.',
+    );
+  }
 }
 
 /// Helper to get current barber id for authenticated user

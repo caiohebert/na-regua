@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:na_regua/screens/admin_schedule_tab.dart';
+import 'package:na_regua/screens/admin_user_management_screen.dart';
 import 'package:na_regua/screens/admin_services_tab.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
@@ -12,23 +12,17 @@ class AdminDashboardScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Área do Barbeiro'),
+          title: const Text('Admin'),
           bottom: const TabBar(
             tabs: [
-              Tab(
-                icon: Icon(Icons.calendar_today),
-                text: 'Agenda',
-              ),
-              Tab(
-                icon: Icon(Icons.content_cut),
-                text: 'Serviços',
-              ),
+              Tab(icon: Icon(Icons.group), text: 'Usuários'),
+              Tab(icon: Icon(Icons.content_cut), text: 'Serviços'),
             ],
           ),
         ),
         body: const TabBarView(
           children: [
-            AdminScheduleTab(),
+            AdminUserManagementScreen(),
             AdminServicesTab(),
           ],
         ),
@@ -36,5 +30,3 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 }
-
-
