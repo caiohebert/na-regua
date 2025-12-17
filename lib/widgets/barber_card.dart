@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/barber_model.dart';
 
 class BarberCard extends StatelessWidget {
@@ -24,14 +25,22 @@ class BarberCard extends StatelessWidget {
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: isSelected
-              ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+              ? Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                )
               : null,
         ),
         child: Row(
           children: [
             CircleAvatar(
-              backgroundImage: barber.imageUrl != null ? NetworkImage(barber.imageUrl!) : null,
+              backgroundImage: barber.avatarUrl != null
+                  ? NetworkImage(barber.avatarUrl!)
+                  : null,
               radius: 24,
+              child: (barber.avatarUrl == null || barber.avatarUrl!.isEmpty)
+                  ? const Icon(Icons.person, color: Colors.white)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -41,20 +50,18 @@ class BarberCard extends StatelessWidget {
                   Text(
                     barber.name,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        barber.rating == null ? 'N/A' : barber.rating!.toString(),
+                        barber.rating == null
+                            ? 'N/A'
+                            : barber.rating!.toString(),
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(width: 12),

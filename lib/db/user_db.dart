@@ -80,9 +80,7 @@ Future<void> ensureBarberProfile() async {
   }
 
   await supabase.from('barbers').upsert(
-    {
-      'user_id': currentUser.id,
-    },
+    {'user_id': currentUser.id},
     onConflict: 'user_id', // prevent duplicate barber rows per user
   );
 }
@@ -106,7 +104,6 @@ Future<Map<String, dynamic>?> getBarberProfile() async {
 Future<void> updateBarberProfile({
   String? description,
   String? location,
-  String? imageUrl,
   String? coverUrl,
 }) async {
   final supabase = Supabase.instance.client;
@@ -118,12 +115,14 @@ Future<void> updateBarberProfile({
   // Ensure row exists so update works
   await ensureBarberProfile();
 
-  await supabase.from('barbers').update({
-    'description': description,
-    'location': location,
-    'image_url': imageUrl,
-    'cover_url': coverUrl,
-  }).eq('user_id', currentUser.id);
+  await supabase
+      .from('barbers')
+      .update({
+        'description': description,
+        'location': location,
+        'cover_url': coverUrl,
+      })
+      .eq('user_id', currentUser.id);
 }
 
 // Promotion functions for current user have been removed.
@@ -134,9 +133,11 @@ Future<List<Map<String, dynamic>>> getAllUsers() async {
   final supabase = Supabase.instance.client;
   final users = await supabase
       .from('users')
-      .select('id, name, email, type')
+      .select('id, name, email, type, avatar_url')
       .order('updated_at', ascending: false);
-  return (users as List<dynamic>).map((e) => e as Map<String, dynamic>).toList();
+  return (users as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList();
 }
 
 /// Update role for any user by id (admin action)
@@ -145,14 +146,19 @@ Future<void> updateUserRoleForUser(String userId, UserRole role) async {
   try {
     final res = await supabase
         .from('users')
-        .update({'type': role.dbName, 'updated_at': DateTime.now().toIso8601String()})
+        .update({
+          'type': role.dbName,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', userId)
         .select();
 
     // If no rows returned, likely permission/RLS prevented the update
     final rows = res as List<dynamic>;
     if (rows.isEmpty) {
-      throw Exception('Falha ao atualizar role: nenhuma linha atualizada. Resultado: $res');
+      throw Exception(
+        'Falha ao atualizar role: nenhuma linha atualizada. Resultado: $res',
+      );
     }
   } catch (e) {
     throw Exception('Erro Supabase ao atualizar role: $e');
@@ -164,10 +170,12 @@ Future<List<Map<String, dynamic>>> getUsersByRole(UserRole role) async {
   final supabase = Supabase.instance.client;
   final users = await supabase
       .from('users')
-      .select('id, name, email, type')
+      .select('id, name, email, type, avatar_url')
       .eq('type', role.dbName)
       .order('updated_at', ascending: false);
-  return (users as List<dynamic>).map((e) => e as Map<String, dynamic>).toList();
+  return (users as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList();
 }
 
 /// Search users by name or email (case-insensitive, partial match)
@@ -179,22 +187,21 @@ Future<List<Map<String, dynamic>>> searchUsers(String query) async {
   // Use PostgREST OR filter via `or` operator
   final users = await supabase
       .from('users')
-      .select('id, name, email, type')
+      .select('id, name, email, type, avatar_url')
       .or('name.ilike.%$q%,email.ilike.%$q%')
       .order('updated_at', ascending: false);
 
-  return (users as List<dynamic>).map((e) => e as Map<String, dynamic>).toList();
+  return (users as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList();
 }
 
 /// Ensure a barber profile exists for any user id
 Future<void> ensureBarberProfileForUser(String userId) async {
   final supabase = Supabase.instance.client;
-  await supabase.from('barbers').upsert(
-    {
-      'user_id': userId,
-    },
-    onConflict: 'user_id',
-  );
+  await supabase.from('barbers').upsert({
+    'user_id': userId,
+  }, onConflict: 'user_id');
 }
 
 /// Remove barber profile for a given user id (used when demoting a barber)
@@ -209,12 +216,17 @@ Future<void> promoteUserToBarberById(String userId) async {
   try {
     final res = await supabase
         .from('users')
-        .update({'type': UserRole.barber.dbName, 'updated_at': DateTime.now().toIso8601String()})
+        .update({
+          'type': UserRole.barber.dbName,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', userId)
         .select();
     final rows = res as List<dynamic>;
     if (rows.isEmpty) {
-      throw Exception('Falha ao promover para barbeiro: nenhuma linha atualizada. Resultado: $res');
+      throw Exception(
+        'Falha ao promover para barbeiro: nenhuma linha atualizada. Resultado: $res',
+      );
     }
     await ensureBarberProfileForUser(userId);
   } catch (e) {
@@ -228,12 +240,17 @@ Future<void> demoteBarberById(String userId, UserRole newRole) async {
   try {
     final res = await supabase
         .from('users')
-        .update({'type': newRole.dbName, 'updated_at': DateTime.now().toIso8601String()})
+        .update({
+          'type': newRole.dbName,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', userId)
         .select();
     final rows = res as List<dynamic>;
     if (rows.isEmpty) {
-      throw Exception('Falha ao demover barbeiro: nenhuma linha atualizada. Resultado: $res');
+      throw Exception(
+        'Falha ao demover barbeiro: nenhuma linha atualizada. Resultado: $res',
+      );
     }
     // Remove barber row if exists
     await removeBarberProfileForUser(userId);
