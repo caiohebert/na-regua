@@ -127,8 +127,136 @@ Future<void> updateBarberProfile({
       .eq('user_id', currentUser.id);
 }
 
-/// Promote current user to admin (barber dashboard) and ensure barber profile
-Future<void> promoteUserToAdminBarber() async {
-  await updateUserRole(UserRole.admin);
-  await ensureBarberProfile();
+// Promotion functions for current user have been removed.
+// Use admin actions (promoteUserToBarberById / demoteBarberById) instead.
+
+/// Get all users (for admin management)
+Future<List<Map<String, dynamic>>> getAllUsers() async {
+  final supabase = Supabase.instance.client;
+  final users = await supabase
+      .from('users')
+      .select('id, name, email, type')
+      .order('updated_at', ascending: false);
+  return (users as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList();
+}
+
+/// Update role for any user by id (admin action)
+Future<void> updateUserRoleForUser(String userId, UserRole role) async {
+  final supabase = Supabase.instance.client;
+  try {
+    final res = await supabase
+        .from('users')
+        .update({
+          'type': role.dbName,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId)
+        .select();
+
+    // If no rows returned, likely permission/RLS prevented the update
+    final rows = res as List<dynamic>;
+    if (rows.isEmpty) {
+      throw Exception(
+        'Falha ao atualizar role: nenhuma linha atualizada. Resultado: $res',
+      );
+    }
+  } catch (e) {
+    throw Exception('Erro Supabase ao atualizar role: $e');
+  }
+}
+
+/// Get users by role (e.g., admins or barbers)
+Future<List<Map<String, dynamic>>> getUsersByRole(UserRole role) async {
+  final supabase = Supabase.instance.client;
+  final users = await supabase
+      .from('users')
+      .select('id, name, email, type')
+      .eq('type', role.dbName)
+      .order('updated_at', ascending: false);
+  return (users as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList();
+}
+
+/// Search users by name or email (case-insensitive, partial match)
+Future<List<Map<String, dynamic>>> searchUsers(String query) async {
+  final supabase = Supabase.instance.client;
+  final q = query.trim();
+  if (q.isEmpty) return [];
+
+  // Use PostgREST OR filter via `or` operator
+  final users = await supabase
+      .from('users')
+      .select('id, name, email, type')
+      .or('name.ilike.%$q%,email.ilike.%$q%')
+      .order('updated_at', ascending: false);
+
+  return (users as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList();
+}
+
+/// Ensure a barber profile exists for any user id
+Future<void> ensureBarberProfileForUser(String userId) async {
+  final supabase = Supabase.instance.client;
+  await supabase.from('barbers').upsert({
+    'user_id': userId,
+  }, onConflict: 'user_id');
+}
+
+/// Remove barber profile for a given user id (used when demoting a barber)
+Future<void> removeBarberProfileForUser(String userId) async {
+  final supabase = Supabase.instance.client;
+  await supabase.from('barbers').delete().eq('user_id', userId);
+}
+
+/// Promote any user (by id) to barber: update role and ensure barber profile
+Future<void> promoteUserToBarberById(String userId) async {
+  final supabase = Supabase.instance.client;
+  try {
+    final res = await supabase
+        .from('users')
+        .update({
+          'type': UserRole.barber.dbName,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId)
+        .select();
+    final rows = res as List<dynamic>;
+    if (rows.isEmpty) {
+      throw Exception(
+        'Falha ao promover para barbeiro: nenhuma linha atualizada. Resultado: $res',
+      );
+    }
+    await ensureBarberProfileForUser(userId);
+  } catch (e) {
+    throw Exception('Erro Supabase ao promover para barbeiro: $e');
+  }
+}
+
+/// Demote a user from barber to another role: update role and remove barber profile
+Future<void> demoteBarberById(String userId, UserRole newRole) async {
+  final supabase = Supabase.instance.client;
+  try {
+    final res = await supabase
+        .from('users')
+        .update({
+          'type': newRole.dbName,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId)
+        .select();
+    final rows = res as List<dynamic>;
+    if (rows.isEmpty) {
+      throw Exception(
+        'Falha ao demover barbeiro: nenhuma linha atualizada. Resultado: $res',
+      );
+    }
+    // Remove barber row if exists
+    await removeBarberProfileForUser(userId);
+  } catch (e) {
+    throw Exception('Erro Supabase ao demover barbeiro: $e');
+  }
 }

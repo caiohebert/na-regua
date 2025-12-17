@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:na_regua/auth_provider.dart';
+import 'package:na_regua/providers/user_role_provider.dart';
+import 'package:na_regua/providers/navigation_provider.dart';
+import 'package:na_regua/screens/main_scaffold.dart';
 import 'package:na_regua/screens/register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -37,6 +40,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
+      // Force providers and UI to refresh after successful sign-in
+      ref.invalidate(sessionProvider);
+      ref.invalidate(userRoleProvider);
+      ref.invalidate(isBarberProvider);
+      ref.read(navigationProvider.notifier).setIndex(0);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainScaffold()),
+        (route) => false,
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -60,6 +73,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       await ref.read(authProvider.notifier).signInWithGoogle();
+      // Force providers and UI refresh
+      ref.invalidate(sessionProvider);
+      ref.invalidate(userRoleProvider);
+      ref.invalidate(isBarberProvider);
+      ref.read(navigationProvider.notifier).setIndex(0);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainScaffold()),
+        (route) => false,
+      );
     } catch (e) {
       if (mounted) {
         setState(() {

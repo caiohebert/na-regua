@@ -214,16 +214,10 @@ class AppointmentCard extends StatelessWidget {
   }
 
   Color _getStatusColor(AppointmentStatus status) {
-    switch (status) {
-      case AppointmentStatus.confirmed:
-        return Colors.green;
-      case AppointmentStatus.pending:
-        return Colors.orange;
-      case AppointmentStatus.cancelled:
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+    if (status == AppointmentStatus.confirmed) return Colors.green;
+    if (status == AppointmentStatus.pending) return Colors.orange;
+    if (status == AppointmentStatus.cancelled) return Colors.red;
+    return Colors.grey;
   }
 
   Future<void> _confirmAppointment(BuildContext context, String appointmentId) async {

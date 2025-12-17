@@ -16,18 +16,13 @@ class StatusText extends StatelessWidget {
   const StatusText({super.key, required this.status, required this.booking});
 
   Color get color {
-    switch (status) {
-      case AppointmentStatus.pending:
-      case AppointmentStatus.confirmed:
-        return const Color(0xFFEDB33C);
-      // TODO implement completed status color
-      // case AppointmentStatus.completed:
-      //   return Colors.green;
-      case AppointmentStatus.cancelled:
-        return Colors.red;
-      default:
-        return Colors.grey;
+    if (status == AppointmentStatus.pending || status == AppointmentStatus.confirmed) {
+      return const Color(0xFFEDB33C);
     }
+    if (status == AppointmentStatus.cancelled) {
+      return Colors.red;
+    }
+    return Colors.grey;
   }
 
   @override
@@ -92,7 +87,7 @@ class CancelButton extends ConsumerWidget {
                 ref.invalidate(bookingsProvider);
 
                 // 4. Atualiza disponibilidade (cancelamento libera o horário)
-                ref.invalidate(barbersProvider(booking.date));
+                ref.invalidate(barbersProvider(BarbersParams(date: booking.date, serviceId: booking.service?.id)));
                 ref.invalidate(
                   timetableProvider(
                     TimetableParams(barber: booking.barber, date: booking.date),
